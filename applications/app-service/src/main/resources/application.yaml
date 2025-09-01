@@ -29,6 +29,16 @@ management:
       probes:
         enabled: true
 
+# R2DBC PostgreSQL adapter configuration
+adapters:
+  r2dbc:
+    host: ${DB_HOST:localhost}
+    port: ${DB_PORT:5432}
+    database: ${DB_NAME:crediya_auth}
+    schema: public
+    username: ${DB_USERNAME:crediya_user}
+    password: ${DB_PASSWORD:crediya_pass}
+
 cors:
   allowed-origins: http://localhost:4200,http://localhost:8080
 
