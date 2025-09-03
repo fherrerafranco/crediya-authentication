@@ -9,7 +9,7 @@ import crediya.authentication.r2dbc.helper.ReactiveAdapterOperations;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.util.UUID;
@@ -24,10 +24,12 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
 >implements UserRepository {
     
     private final UserReactiveRepository userReactiveRepository;
+    private final TransactionalOperator transactionalOperator;
     
-    public UserReactiveRepositoryAdapter(UserReactiveRepository repository, ObjectMapper mapper) {
+    public UserReactiveRepositoryAdapter(UserReactiveRepository repository, ObjectMapper mapper, TransactionalOperator transactionalOperator) {
         super(repository, mapper, UserReactiveRepositoryAdapter::entityToDomain);
         this.userReactiveRepository = repository;
+        this.transactionalOperator = transactionalOperator;
     }
     
     private static User entityToDomain(UserEntity entity) {
@@ -70,41 +72,33 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    @Transactional
     public Mono<User> save(User user) {
-        log.trace("Starting database save operation for user with email: {}", user != null ? user.getEmail() : "null");
-        
         if (user == null) {
             return Mono.error(new IllegalArgumentException("User cannot be null"));
         }
         
-        log.debug("Saving user with id: {}", user.getId());
+        log.info("Saving user with email: {}", user.getEmail());
         
         // R2DBC will automatically generate UUID for new entities (when ID is null)
         UserEntity userEntity = toData(user);
         return userReactiveRepository.save(userEntity)
                 .map(this::toEntity)
-                .doOnSuccess(savedUser -> log.trace("Successfully saved user with id: {} to database", savedUser.getId()))
+                .doOnSuccess(savedUser -> log.info("Successfully saved user with id: {}", savedUser.getId()))
                 .doOnError(error -> log.error("Database save operation failed for user with email: {}, error: {}", 
-                        user.getEmail(), error.getMessage()));
+                        user.getEmail(), error.getMessage()))
+                .as(transactionalOperator::transactional);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Flux<User> getAll() {
-        log.trace("Starting database query to retrieve all users");
+        log.info("Retrieving all users from database");
         return super.findAll()
-                .doOnComplete(() -> log.trace("Successfully completed database query for all users"))
-                .doOnError(error -> log.error("Database query failed for getAllUsers: {}", error.getMessage()))
-                .doOnNext(user -> log.trace("Retrieved user from database with id: {}", user.getId()));
+                .doOnError(error -> log.error("Database query failed for getAllUsers: {}", error.getMessage()));
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Mono<Boolean> existsByEmail(Email email) {
-        log.trace("Checking email existence in database: {}", email);
         return userReactiveRepository.existsByEmail(email.getValue())
-                .doOnSuccess(exists -> log.trace("Email existence check result: {}", exists))
                 .doOnError(error -> log.error("Error checking email existence: {}", error.getMessage()));
     }
 

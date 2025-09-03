@@ -337,4 +337,259 @@ class UserUseCaseTest {
 
         verify(userRepository, times(1)).getAll();
     }
+
+    @Test
+    @DisplayName("Should handle checkEmailUniqueness when repository returns empty")
+    void shouldHandleCheckEmailUniquenessWhenRepositoryReturnsEmpty() {
+        User user = User.builder()
+                .firstName("John")
+                .lastName("Doe")
+                .email(Email.of("john.doe@example.com"))
+                .baseSalary(Salary.of(new BigDecimal("50000")))
+                .build();
+
+        User savedUser = User.builder()
+                .id("generated-id")
+                .firstName("John")
+                .lastName("Doe")
+                .email(Email.of("john.doe@example.com"))
+                .baseSalary(Salary.of(new BigDecimal("50000")))
+                .build();
+
+        // Repository returns empty, defaultIfEmpty(true) should make it unique
+        when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.empty());
+        when(userRepository.save(user)).thenReturn(Mono.just(savedUser));
+
+        Mono<User> result = userUseCase.saveUser(user);
+
+        StepVerifier.create(result)
+                .expectNext(savedUser)
+                .verifyComplete();
+
+        verify(userRepository, times(1)).existsByEmail(any(Email.class));
+        verify(userRepository, times(1)).save(user);
+    }
+
+    @Test
+    @DisplayName("Should handle repository error during email existence check")
+    void shouldHandleRepositoryErrorDuringEmailExistenceCheck() {
+        User user = User.builder()
+                .firstName("John")
+                .lastName("Doe")
+                .email(Email.of("john.doe@example.com"))
+                .baseSalary(Salary.of(new BigDecimal("50000")))
+                .build();
+
+        RuntimeException expectedException = new RuntimeException("Database connection error");
+        when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.error(expectedException));
+
+        Mono<User> result = userUseCase.saveUser(user);
+
+        StepVerifier.create(result)
+                .expectError(RuntimeException.class)
+                .verify();
+
+        verify(userRepository, times(1)).existsByEmail(any(Email.class));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should handle user with minimal required data")
+    void shouldHandleUserWithMinimalRequiredData() {
+        User minimalUser = User.builder()
+                .email(Email.of("minimal@example.com"))
+                .baseSalary(Salary.of(BigDecimal.ZERO))
+                .build();
+
+        User savedMinimalUser = User.builder()
+                .id("minimal-id")
+                .email(Email.of("minimal@example.com"))
+                .baseSalary(Salary.of(BigDecimal.ZERO))
+                .build();
+
+        when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
+        when(userRepository.save(minimalUser)).thenReturn(Mono.just(savedMinimalUser));
+
+        Mono<User> result = userUseCase.saveUser(minimalUser);
+
+        StepVerifier.create(result)
+                .expectNext(savedMinimalUser)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should handle user with maximum salary")
+    void shouldHandleUserWithMaximumSalary() {
+        User maxSalaryUser = User.builder()
+                .firstName("Rich")
+                .lastName("Person")
+                .email(Email.of("rich@example.com"))
+                .baseSalary(Salary.of(new BigDecimal("15000000")))
+                .build();
+
+        User savedMaxSalaryUser = User.builder()
+                .id("rich-id")
+                .firstName("Rich")
+                .lastName("Person")
+                .email(Email.of("rich@example.com"))
+                .baseSalary(Salary.of(new BigDecimal("15000000")))
+                .build();
+
+        when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
+        when(userRepository.save(maxSalaryUser)).thenReturn(Mono.just(savedMaxSalaryUser));
+
+        Mono<User> result = userUseCase.saveUser(maxSalaryUser);
+
+        StepVerifier.create(result)
+                .expectNext(savedMaxSalaryUser)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should handle user with all fields populated")
+    void shouldHandleUserWithAllFieldsPopulated() {
+        User completeUser = User.builder()
+                .id("existing-id")
+                .firstName("Complete")
+                .lastName("User")
+                .email(Email.of("complete@example.com"))
+                .identityDocument("COMP123456789")
+                .phone("+1-555-123-4567")
+                .roleId("ADMIN")
+                .baseSalary(Salary.of(new BigDecimal("85000.50")))
+                .birthDate("1990-12-25")
+                .address("123 Complete Street, Full City, State 12345")
+                .build();
+
+        User savedCompleteUser = User.builder()
+                .id("saved-complete-id")
+                .firstName("Complete")
+                .lastName("User")
+                .email(Email.of("complete@example.com"))
+                .identityDocument("COMP123456789")
+                .phone("+1-555-123-4567")
+                .roleId("ADMIN")
+                .baseSalary(Salary.of(new BigDecimal("85000.50")))
+                .birthDate("1990-12-25")
+                .address("123 Complete Street, Full City, State 12345")
+                .build();
+
+        when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
+        when(userRepository.save(completeUser)).thenReturn(Mono.just(savedCompleteUser));
+
+        Mono<User> result = userUseCase.saveUser(completeUser);
+
+        StepVerifier.create(result)
+                .expectNext(savedCompleteUser)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should handle multiple rapid save attempts")
+    void shouldHandleMultipleRapidSaveAttempts() {
+        User user1 = User.builder()
+                .firstName("User1")
+                .email(Email.of("user1@example.com"))
+                .baseSalary(Salary.of(new BigDecimal("50000")))
+                .build();
+
+        User user2 = User.builder()
+                .firstName("User2")
+                .email(Email.of("user2@example.com"))
+                .baseSalary(Salary.of(new BigDecimal("60000")))
+                .build();
+
+        User saved1 = User.builder().id("id1").firstName("User1").email(Email.of("user1@example.com")).baseSalary(Salary.of(new BigDecimal("50000"))).build();
+        User saved2 = User.builder().id("id2").firstName("User2").email(Email.of("user2@example.com")).baseSalary(Salary.of(new BigDecimal("60000"))).build();
+
+        when(userRepository.existsByEmail(Email.of("user1@example.com"))).thenReturn(Mono.just(false));
+        when(userRepository.existsByEmail(Email.of("user2@example.com"))).thenReturn(Mono.just(false));
+        when(userRepository.save(user1)).thenReturn(Mono.just(saved1));
+        when(userRepository.save(user2)).thenReturn(Mono.just(saved2));
+
+        Flux<User> results = Flux.merge(
+            userUseCase.saveUser(user1),
+            userUseCase.saveUser(user2)
+        );
+
+        StepVerifier.create(results)
+                .expectNextCount(2)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should handle repository returning unexpected null")
+    void shouldHandleRepositoryReturningUnexpectedNull() {
+        User user = User.builder()
+                .firstName("Test")
+                .email(Email.of("test@example.com"))
+                .baseSalary(Salary.of(new BigDecimal("50000")))
+                .build();
+
+        when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
+        when(userRepository.save(user)).thenReturn(Mono.empty());
+
+        Mono<User> result = userUseCase.saveUser(user);
+
+        StepVerifier.create(result)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should handle concurrent email existence checks")
+    void shouldHandleConcurrentEmailExistenceChecks() {
+        User user = User.builder()
+                .firstName("Concurrent")
+                .email(Email.of("concurrent@example.com"))
+                .baseSalary(Salary.of(new BigDecimal("50000")))
+                .build();
+
+        User savedUser = User.builder()
+                .id("concurrent-id")
+                .firstName("Concurrent")
+                .email(Email.of("concurrent@example.com"))
+                .baseSalary(Salary.of(new BigDecimal("50000")))
+                .build();
+
+        when(userRepository.existsByEmail(any(Email.class)))
+                .thenReturn(Mono.just(false).delayElement(java.time.Duration.ofMillis(100)));
+        when(userRepository.save(user)).thenReturn(Mono.just(savedUser));
+
+        Mono<User> result = userUseCase.saveUser(user);
+
+        StepVerifier.create(result)
+                .expectNext(savedUser)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should validate email format through value object")
+    void shouldValidateEmailFormatThroughValueObject() {
+        // This test ensures that email validation happens at the value object level
+        // before it even reaches the use case
+        StepVerifier.create(
+            Mono.fromCallable(() -> User.builder()
+                .firstName("Invalid")
+                .email(Email.of("not-an-email"))
+                .baseSalary(Salary.of(new BigDecimal("50000")))
+                .build())
+        )
+        .expectError(ValidationException.class)
+        .verify();
+    }
+
+    @Test
+    @DisplayName("Should validate salary range through value object")
+    void shouldValidateSalaryRangeThroughValueObject() {
+        // This test ensures that salary validation happens at the value object level
+        StepVerifier.create(
+            Mono.fromCallable(() -> User.builder()
+                .firstName("Invalid")
+                .email(Email.of("valid@example.com"))
+                .baseSalary(Salary.of(new BigDecimal("-1")))
+                .build())
+        )
+        .expectError(ValidationException.class)
+        .verify();
+    }
 }

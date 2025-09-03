@@ -32,22 +32,18 @@ public class Handler {
                 request.headers().firstHeader("User-Agent"));
         
         return request.bodyToMono(UserCreateRequest.class)
-                .doOnNext(userRequest -> log.debug(LogMessages.REQUEST_PARSED, userRequest.getEmail()))
                 .flatMap(this::validateRequest)
                 .flatMap(validRequest -> {
                     try {
                         User user = userMapper.toDomain(validRequest);
-                        log.debug(LogMessages.DOMAIN_MAPPING_SUCCESS);
-                        log.trace(LogMessages.STARTING_USER_REGISTRATION);
                         return userUseCase.saveUser(user);
                     } catch (Exception e) {
-                        log.warn(LogMessages.DOMAIN_VALIDATION_FAILED, e.getMessage());
                         return Mono.error(e);
                     }
                 })
-.flatMap(savedUser -> {
+                .flatMap(savedUser -> {
                     log.info(LogMessages.USER_CREATED_SUCCESS, savedUser.getId());
-UserResponse response = userMapper.toResponse(savedUser);
+                    UserResponse response = userMapper.toResponse(savedUser);
                     return ServerResponse.status(HttpStatus.CREATED)
                             .contentType(MediaType.APPLICATION_JSON)
                             .bodyValue(response);
@@ -60,7 +56,6 @@ UserResponse response = userMapper.toResponse(savedUser);
                 request.remoteAddress().map(addr -> addr.getAddress().getHostAddress()).orElse("unknown"),
                 request.headers().firstHeader("User-Agent"));
         
-        log.trace(LogMessages.GET_ALL_USERS_SUCCESS);
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(userUseCase.getAllUsers().map(userMapper::toResponse), UserResponse.class)
@@ -73,7 +68,7 @@ UserResponse response = userMapper.toResponse(savedUser);
         validator.validate(request, bindingResult);
         
         if (bindingResult.hasErrors()) {
-            log.warn(LogMessages.VALIDATION_FAILED, bindingResult.getAllErrors());
+            log.info(LogMessages.VALIDATION_FAILED, bindingResult.getAllErrors());
             StringBuilder errorMessage = new StringBuilder("Validation failed: ");
             bindingResult.getAllErrors().forEach(error -> 
                 errorMessage.append(error.getDefaultMessage()).append("; "));

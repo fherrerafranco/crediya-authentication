@@ -4,17 +4,19 @@ import crediya.authentication.model.user.User;
 import crediya.authentication.model.valueobjects.Email;
 import crediya.authentication.model.valueobjects.Salary;
 import crediya.authentication.r2dbc.entity.UserEntity;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivecommons.utils.ObjectMapper;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -22,7 +24,6 @@ import java.util.UUID;
 @ExtendWith(MockitoExtension.class)
 class UserReactiveRepositoryAdapterTest {
 
-    @InjectMocks
     UserReactiveRepositoryAdapter repositoryAdapter;
 
     @Mock
@@ -30,6 +31,14 @@ class UserReactiveRepositoryAdapterTest {
 
     @Mock
     ObjectMapper mapper;
+
+    @Mock
+    TransactionalOperator transactionalOperator;
+
+    @BeforeEach
+    void setup() {
+        repositoryAdapter = new UserReactiveRepositoryAdapter(repository, mapper, transactionalOperator);
+    }
 
     private final UUID testUuid1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
     private final UUID testUuid2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
@@ -63,6 +72,7 @@ class UserReactiveRepositoryAdapterTest {
     @Test
     void shouldSaveUser() {
         when(repository.save(any(UserEntity.class))).thenReturn(Mono.just(userEntity));
+        when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Mono<User> result = repositoryAdapter.save(user);
 

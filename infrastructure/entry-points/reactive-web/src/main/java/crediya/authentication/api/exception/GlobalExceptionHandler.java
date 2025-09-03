@@ -112,7 +112,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoResourceFoundException.class)
     public Mono<ResponseEntity<Map<String, Object>>> handleNoResourceFoundException(NoResourceFoundException ex) {
-        log.warn("Resource not found: {}", ex.getMessage());
+        log.error("Resource not found: {}", ex.getMessage());
         
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());

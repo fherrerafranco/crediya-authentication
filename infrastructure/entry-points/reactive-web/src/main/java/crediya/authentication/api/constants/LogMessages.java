@@ -36,12 +36,5 @@ public final class LogMessages {
     
     // Domain use case logging templates
     public static final String STARTING_USER_REGISTRATION = "Starting user registration use case";
-    public static final String USER_VALIDATION_FAILED_NULL = "User validation failed: user is null";
-    public static final String EMAIL_UNIQUENESS_VALIDATION_FAILED = "Email uniqueness validation failed: {}";
-    public static final String EMAIL_UNIQUENESS_CHECK_PASSED = "Email uniqueness check passed, proceeding with user creation";
-    public static final String USER_REGISTRATION_SUCCESS = "Successfully registered user with id: {}";
-    public static final String USER_REGISTRATION_FAILED = "User registration failed for email: {}, error: {}";
     public static final String GET_ALL_USERS_SUCCESS = "Successfully completed getAllUsers use case";
-    public static final String GET_ALL_USERS_FAILED = "getAllUsers use case failed: {}";
-    public static final String CHECKING_EMAIL_UNIQUENESS = "Checking email uniqueness for: {}";
 }

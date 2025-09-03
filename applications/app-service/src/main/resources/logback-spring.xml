@@ -4,11 +4,11 @@
     <property name="LOGS" value="./logs" />
 
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
-        <layout class="ch.qos.logback.classic.PatternLayout">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>
                 %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
             </Pattern>
-        </layout>
+        </encoder>
     </appender>
 
     <appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -19,11 +19,11 @@
             </Pattern>
         </encoder>
 
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOGS}/archived/spring-boot-logger-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
     </appender>
     
@@ -33,8 +33,8 @@
         <appender-ref ref="Console" />
     </root>
 
-    <!-- LOG "crediya.authentication" at TRACE level -->
-    <logger name="crediya.authentication" level="trace" additivity="false">
+    <!-- LOG "crediya.authentication" at INFO level -->
+    <logger name="crediya.authentication" level="info" additivity="false">
         <appender-ref ref="RollingFile" />
         <appender-ref ref="Console" />
     </logger>
