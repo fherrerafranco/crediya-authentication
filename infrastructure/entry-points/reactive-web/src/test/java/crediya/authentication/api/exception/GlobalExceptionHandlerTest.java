@@ -1,5 +1,6 @@
 package crediya.authentication.api.exception;
 
+import crediya.authentication.model.constants.DomainErrorMessages;
 import crediya.authentication.model.exception.BusinessRuleViolationException;
 import crediya.authentication.model.exception.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,8 +53,8 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("Should handle BusinessRuleViolationException with 409 Conflict")
     void shouldHandleBusinessRuleViolationExceptionWith409Conflict() {
-        BusinessRuleViolationException exception = 
-            new BusinessRuleViolationException("Email already registered: test@example.com");
+        BusinessRuleViolationException exception =
+                new BusinessRuleViolationException(DomainErrorMessages.EMAIL_ALREADY_REGISTERED.formatted("test@example.com"));
         
         Mono<ResponseEntity<Map<String, Object>>> result = 
             globalExceptionHandler.handleBusinessRuleViolation(exception);

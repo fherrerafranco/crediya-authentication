@@ -45,3 +45,18 @@ cors:
 routes:
   paths:
     users: /api/v1/users
+
+# Security Configuration
+security:
+  jwt:
+    public-paths:
+      - /api/v1/login
+      - /actuator/health
+      - /actuator/prometheus
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-very-long-secret-key-here-must-be-256-bits-minimum-for-security}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+  issuer: ${JWT_ISSUER:crediya-auth-service}
+  audience: ${JWT_AUDIENCE:crediya-app}

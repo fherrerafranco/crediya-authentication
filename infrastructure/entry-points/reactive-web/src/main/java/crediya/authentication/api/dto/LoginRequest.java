@@ -1,5 +1,6 @@
 package crediya.authentication.api.dto;
 
+import crediya.authentication.api.config.ErrorMessages;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -11,10 +12,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class LoginRequest {
     
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
+    @NotBlank(message = ErrorMessages.EMAIL_REQUIRED)
+    @Email(message = ErrorMessages.EMAIL_MUST_BE_VALID)
     private String email;
     
-    @NotBlank(message = "Password is required")
+    @NotBlank(message = ErrorMessages.PASSWORD_REQUIRED)
     private String password;
 }

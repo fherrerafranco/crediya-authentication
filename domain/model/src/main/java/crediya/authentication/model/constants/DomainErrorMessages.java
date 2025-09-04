@@ -23,4 +23,9 @@ public final class DomainErrorMessages {
     
     // Field validation templates
     public static final String VALIDATION_FAILED_TEMPLATE = "Validation failed for field '%s': %s";
+
+    public static final String INVALID_ROLE_ID = "Invalid role ID";
+    public static final String INVALID_CREDENTIALS = "Invalid email or password";
+    
+
 }

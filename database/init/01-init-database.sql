@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     first_name VARCHAR(255),
     last_name VARCHAR(255),
     email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255),
     identity_document VARCHAR(255),
     phone VARCHAR(50),
     role_id VARCHAR(255),
@@ -43,6 +44,7 @@ COMMENT ON COLUMN users.user_id IS 'Primary key, mapped to UserEntity.id';
 COMMENT ON COLUMN users.first_name IS 'User first name, mapped to UserEntity.firstName';
 COMMENT ON COLUMN users.last_name IS 'User last name, mapped to UserEntity.lastName';
 COMMENT ON COLUMN users.email IS 'User email, must be unique - mapped to UserEntity.email';
+COMMENT ON COLUMN users.password_hash IS 'User password hash for authentication, mapped to UserEntity.passwordHash';
 COMMENT ON COLUMN users.identity_document IS 'User identity document, mapped to UserEntity.identityDocument';
 COMMENT ON COLUMN users.phone IS 'User phone number, mapped to UserEntity.phone';
 COMMENT ON COLUMN users.role_id IS 'User role identifier, mapped to UserEntity.roleId';

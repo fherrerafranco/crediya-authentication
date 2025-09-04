@@ -17,6 +17,7 @@ public interface UserMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(source = "email", target = "email", qualifiedByName = "stringToEmail")
     @Mapping(source = "baseSalary", target = "baseSalary", qualifiedByName = "bigDecimalToSalary")
+    @Mapping(source = "password", target = "passwordHash")
     User toDomain(UserCreateRequest request);
     
     @Mapping(source = "email", target = "email", qualifiedByName = "emailToString")

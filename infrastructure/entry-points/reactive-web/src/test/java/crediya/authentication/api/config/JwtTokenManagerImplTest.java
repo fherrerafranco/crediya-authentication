@@ -1,16 +1,8 @@
 package crediya.authentication.api.config;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,7 +15,9 @@ class JwtTokenManagerImplTest {
     void setUp() {
         String testSecret = "test-secret-key-that-is-at-least-256-bits-long-for-hs256-algorithm-testing";
         Long testExpiration = 3600000L; // 1 hour
-        jwtTokenManager = new JwtTokenManagerImpl(testSecret, testExpiration);
+        String testIssuer = "crediya-auth-service";
+        String testAudience = "crediya-app";
+        jwtTokenManager = new JwtTokenManagerImpl(testSecret, testExpiration, testIssuer, testAudience);
     }
 
     @Test
@@ -260,5 +254,27 @@ class JwtTokenManagerImplTest {
         assertThat(token1).isNotNull().isNotEmpty();
         assertThat(token2).isNotNull().isNotEmpty();
         assertThat(token1).isNotEqualTo(token2);
+    }
+
+    @Test
+    @DisplayName("Should validate token with correct issuer and audience")
+    void shouldValidateTokenWithCorrectIssuerAndAudience() {
+        String token = jwtTokenManager.generateToken("user123", 1);
+        
+        boolean isValid = jwtTokenManager.validateToken(token);
+        
+        assertThat(isValid).isTrue();
+    }
+
+    @Test
+    @DisplayName("Should generate tokens with unique JWT IDs")
+    void shouldGenerateTokensWithUniqueJwtIds() {
+        String token1 = jwtTokenManager.generateToken("user123", 1);
+        String token2 = jwtTokenManager.generateToken("user123", 1);
+        
+        // Even with same user and role, tokens should be different due to unique JWT IDs
+        assertThat(token1).isNotEqualTo(token2);
+        assertThat(jwtTokenManager.validateToken(token1)).isTrue();
+        assertThat(jwtTokenManager.validateToken(token2)).isTrue();
     }
 }

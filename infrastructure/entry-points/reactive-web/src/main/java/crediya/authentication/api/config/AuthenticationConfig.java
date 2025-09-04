@@ -34,10 +34,7 @@ public class AuthenticationConfig {
         };
     }
     
-    @Bean
-    public AuthorizationService authorizationService(RoleRepository roleRepository) {
-        return new AuthorizationService(roleRepository);
-    }
+    // AuthorizationService bean is now provided by @Service annotation in crediya.authentication.api.config.AuthorizationService
     
     @Bean
     public LoginUseCase loginUseCase(UserRepository userRepository, 

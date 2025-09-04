@@ -1,5 +1,6 @@
 package crediya.authentication.api.dto;
 
+import crediya.authentication.api.config.ErrorMessages;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -16,16 +17,16 @@ import java.math.BigDecimal;
 @Schema(description = "Request payload for creating a new user")
 public class UserCreateRequest {
     
-    @NotBlank(message = "First name is required")
+    @NotBlank(message = ErrorMessages.FIRST_NAME_REQUIRED)
     @Schema(description = "User's first name", example = "John", required = true)
     private String firstName;
     
-    @NotBlank(message = "Last name is required")
+    @NotBlank(message = ErrorMessages.LAST_NAME_REQUIRED)
     @Schema(description = "User's last name", example = "Doe", required = true)
     private String lastName;
     
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
+    @NotBlank(message = ErrorMessages.EMAIL_REQUIRED)
+    @Email(message = ErrorMessages.EMAIL_MUST_BE_VALID)
     @Schema(description = "User's email address", example = "john.doe@example.com", required = true)
     private String email;
     
@@ -38,7 +39,7 @@ public class UserCreateRequest {
     @Schema(description = "User's role identifier", example = "1")
     private String roleId;
     
-    @NotNull(message = "Base salary is required")
+    @NotNull(message = ErrorMessages.BASE_SALARY_REQUIRED)
     @DecimalMin(value = "0.0", inclusive = true, message = "Base salary must be at least 0")
     @DecimalMax(value = "15000000.0", inclusive = true, message = "Base salary must not exceed 15,000,000")
     @Schema(description = "User's base salary (between 0 and 15,000,000)", example = "1000000", required = true)
@@ -49,4 +50,9 @@ public class UserCreateRequest {
     
     @Schema(description = "User's address", example = "Street 123 #45-67")
     private String address;
+    
+    @NotBlank(message = ErrorMessages.PASSWORD_REQUIRED)
+    @Size(min = 6, message = "Password must be at least 6 characters long")
+    @Schema(description = "User's password (minimum 6 characters)", example = "password123", required = true)
+    private String password;
 }

@@ -61,7 +61,7 @@ class DomainErrorMessagesTest {
     void shouldFormatEmailAlreadyRegisteredMessageCorrectly() {
         String email = "test@example.com";
         String formattedMessage = String.format(DomainErrorMessages.EMAIL_ALREADY_REGISTERED, email);
-        assertThat(formattedMessage).isEqualTo("Email already registered: test@example.com");
+        assertThat(formattedMessage).isEqualTo("Email already registered: " + email);
     }
 
     @Test

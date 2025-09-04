@@ -11,7 +11,11 @@ import crediya.authentication.api.dto.LoginRequest;
 import crediya.authentication.api.dto.LoginResponse;
 import crediya.authentication.api.mapper.UserMapper;
 import crediya.authentication.api.constants.LogMessages;
+import crediya.authentication.api.config.ErrorMessages;
+import crediya.authentication.api.config.AuthorizationService;
 import crediya.authentication.model.exception.ValidationException;
+import crediya.authentication.model.exception.BusinessRuleViolationException;
+import crediya.authentication.model.auth.gateways.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -31,11 +35,20 @@ public class Handler {
     private final LoginUseCase loginUseCase;
     private final Validator validator;
     private final UserMapper userMapper;
+    private final AuthorizationService authorizationService;
+    private final PasswordEncoder passwordEncoder;
 
     public Mono<ServerResponse> listenSaveUser(ServerRequest request) {
         log.info(LogMessages.POST_REQUEST_RECEIVED, 
                 request.remoteAddress().map(addr -> addr.getAddress().getHostAddress()).orElse("unknown"),
                 request.headers().firstHeader("User-Agent"));
+        
+        // Check authorization - only ADMIN or ADVISOR can create users
+        if (!authorizationService.hasAdminOrAdvisorRole(request.exchange())) {
+            return ServerResponse.status(HttpStatus.FORBIDDEN)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue("{\"error\":\"Insufficient permissions to create users\"}");
+        }
         
         return request.bodyToMono(UserCreateRequest.class)
                 .flatMap(this::validateRequest)
@@ -61,6 +74,13 @@ public class Handler {
         log.info(LogMessages.GET_REQUEST_RECEIVED, 
                 request.remoteAddress().map(addr -> addr.getAddress().getHostAddress()).orElse("unknown"),
                 request.headers().firstHeader("User-Agent"));
+        
+        // Check authorization - only ADMIN or ADVISOR can view all users
+        if (!authorizationService.hasAdminOrAdvisorRole(request.exchange())) {
+            return ServerResponse.status(HttpStatus.FORBIDDEN)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue("{\"error\":\"Insufficient permissions to view all users\"}");
+        }
         
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -106,7 +126,7 @@ public class Handler {
                                     .expiresIn(86400L)
                                     .build())
                 )
-                .doOnSuccess(response -> log.info("User authenticated successfully"))
+                .doOnSuccess(response -> log.info(ErrorMessages.USER_AUTHENTICATED_SUCCESS))
                 .doOnError(error -> log.error("Authentication failed: {}", error.getMessage()));
     }
     
@@ -124,4 +144,6 @@ public class Handler {
         
         return Mono.just(request);
     }
+    
+
 }
