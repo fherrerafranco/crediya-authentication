@@ -35,12 +35,14 @@ public class UserEntity {
     @Column("phone")
     private String phone;
     @Column("role_id")
-    private String roleId;
+    private Integer roleId;
     @Column("base_salary")
     private BigDecimal baseSalary;
     @Column("birth_date")
     private String birthDate;
     @Column("address")
     private String address;
+    @Column("password_hash")
+    private String passwordHash;
 
 }

@@ -1,16 +1,19 @@
 package crediya.authentication.api;
 
 import crediya.authentication.api.config.UserPath;
+import crediya.authentication.api.config.TestSecurityConfig;
 import crediya.authentication.api.exception.GlobalExceptionHandler;
 import crediya.authentication.api.dto.UserCreateRequest;
 import crediya.authentication.api.dto.UserResponse;
 import crediya.authentication.api.mapper.UserMapper;
 import crediya.authentication.model.user.User;
 import crediya.authentication.usecase.user.UserUseCase;
+import crediya.authentication.usecase.auth.LoginUseCase;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -33,6 +36,7 @@ import static org.mockito.Mockito.doNothing;
 
 @ContextConfiguration(classes = {RouterRest.class, Handler.class, UserPath.class, GlobalExceptionHandler.class})
 @WebFluxTest
+@Import(TestSecurityConfig.class)
 @TestPropertySource(properties = {
     "routes.paths.users=/api/v1/users"
 })
@@ -43,6 +47,9 @@ class RouterRestTest {
 
     @MockitoBean
     private UserUseCase userUseCase;
+    
+    @MockitoBean
+    private LoginUseCase loginUseCase;
     
     @MockitoBean
     private UserMapper userMapper;

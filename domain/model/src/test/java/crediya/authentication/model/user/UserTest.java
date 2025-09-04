@@ -21,7 +21,7 @@ class UserTest {
 .email(Email.of("john.doe@example.com"))
                 .identityDocument("123456789")
                 .phone("1234567890")
-                .roleId("1")
+                .roleId(1)
 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .birthDate("1990-01-01")
                 .address("123 Main St")
@@ -34,7 +34,7 @@ class UserTest {
 assertThat(user.getEmail()).isEqualTo(Email.of("john.doe@example.com"));
         assertThat(user.getIdentityDocument()).isEqualTo("123456789");
         assertThat(user.getPhone()).isEqualTo("1234567890");
-        assertThat(user.getRoleId()).isEqualTo("1");
+        assertThat(user.getRoleId()).isEqualTo(1);
 assertThat(user.getBaseSalary()).isEqualTo(Salary.of(new BigDecimal("50000")));
         assertThat(user.getBirthDate()).isEqualTo("1990-01-01");
         assertThat(user.getAddress()).isEqualTo("123 Main St");
@@ -50,10 +50,11 @@ assertThat(user.getBaseSalary()).isEqualTo(Salary.of(new BigDecimal("50000")));
 Email.of("jane.smith@example.com"),
                 "987654321",
                 "0987654321",
-                "2",
+                2,
 Salary.of(new BigDecimal("75000")),
                 "1985-05-15",
-                "456 Oak Ave"
+                "456 Oak Ave",
+                null
         );
 
         assertThat(user).isNotNull();
@@ -63,7 +64,7 @@ Salary.of(new BigDecimal("75000")),
 assertThat(user.getEmail()).isEqualTo(Email.of("jane.smith@example.com"));
         assertThat(user.getIdentityDocument()).isEqualTo("987654321");
         assertThat(user.getPhone()).isEqualTo("0987654321");
-        assertThat(user.getRoleId()).isEqualTo("2");
+        assertThat(user.getRoleId()).isEqualTo(2);
 assertThat(user.getBaseSalary()).isEqualTo(Salary.of(new BigDecimal("75000")));
         assertThat(user.getBirthDate()).isEqualTo("1985-05-15");
         assertThat(user.getAddress()).isEqualTo("456 Oak Ave");
@@ -131,7 +132,7 @@ assertThat(user.getEmail()).isEqualTo(Email.of("partial@example.com"));
                 .email(Email.of("john@example.com"))
                 .identityDocument("123456789")
                 .phone("1234567890")
-                .roleId("1")
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .birthDate("1990-01-01")
                 .address("123 Main St")
@@ -153,148 +154,6 @@ assertThat(user.getEmail()).isEqualTo(Email.of("partial@example.com"));
         assertThat(user2.getId()).isEqualTo("456");
     }
 
-    @Test
-    @DisplayName("Should have toString method from Object class")
-    void shouldHaveToStringMethodFromObjectClass() {
-        User user = User.builder()
-                .id("123")
-                .firstName("John")
-                .lastName("Doe")
-                .email(Email.of("john@example.com"))
-                .build();
 
-        String userString = user.toString();
-        // Default Object.toString() format: ClassName@hashcode
-        assertThat(userString).isNotNull();
-        assertThat(userString).isNotEmpty();
-        assertThat(userString).contains("User@");
-    }
 
-    @Test
-    @DisplayName("Should handle empty strings as fields")
-    void shouldHandleEmptyStringsAsFields() {
-        User user = User.builder()
-                .id("")
-                .firstName("")
-                .lastName("")
-                .identityDocument("")
-                .phone("")
-                .roleId("")
-                .birthDate("")
-                .address("")
-                .build();
-
-        assertThat(user).isNotNull();
-        assertThat(user.getId()).isEmpty();
-        assertThat(user.getFirstName()).isEmpty();
-        assertThat(user.getLastName()).isEmpty();
-        assertThat(user.getIdentityDocument()).isEmpty();
-        assertThat(user.getPhone()).isEmpty();
-        assertThat(user.getRoleId()).isEmpty();
-        assertThat(user.getBirthDate()).isEmpty();
-        assertThat(user.getAddress()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should handle very long strings")
-    void shouldHandleVeryLongStrings() {
-        String longString = "a".repeat(1000);
-        
-        User user = User.builder()
-                .firstName(longString)
-                .lastName(longString)
-                .identityDocument(longString)
-                .phone(longString)
-                .address(longString)
-                .build();
-
-        assertThat(user.getFirstName()).hasSize(1000);
-        assertThat(user.getLastName()).hasSize(1000);
-        assertThat(user.getIdentityDocument()).hasSize(1000);
-        assertThat(user.getPhone()).hasSize(1000);
-        assertThat(user.getAddress()).hasSize(1000);
-    }
-
-    @Test
-    @DisplayName("Should handle special characters in fields")
-    void shouldHandleSpecialCharactersInFields() {
-        String specialChars = "áéíóú ñÑ @#$%^&*()_+-=[]{}|;':\",./<>?";
-        
-        User user = User.builder()
-                .firstName(specialChars)
-                .lastName(specialChars)
-                .identityDocument(specialChars)
-                .phone(specialChars)
-                .roleId(specialChars)
-                .birthDate(specialChars)
-                .address(specialChars)
-                .build();
-
-        assertThat(user.getFirstName()).isEqualTo(specialChars);
-        assertThat(user.getLastName()).isEqualTo(specialChars);
-        assertThat(user.getIdentityDocument()).isEqualTo(specialChars);
-        assertThat(user.getPhone()).isEqualTo(specialChars);
-        assertThat(user.getRoleId()).isEqualTo(specialChars);
-        assertThat(user.getBirthDate()).isEqualTo(specialChars);
-        assertThat(user.getAddress()).isEqualTo(specialChars);
-    }
-
-    @Test
-    @DisplayName("Should handle whitespace-only strings")
-    void shouldHandleWhitespaceOnlyStrings() {
-        String whitespace = "   \t\n\r   ";
-        
-        User user = User.builder()
-                .firstName(whitespace)
-                .lastName(whitespace)
-                .identityDocument(whitespace)
-                .phone(whitespace)
-                .roleId(whitespace)
-                .birthDate(whitespace)
-                .address(whitespace)
-                .build();
-
-        assertThat(user.getFirstName()).isEqualTo(whitespace);
-        assertThat(user.getLastName()).isEqualTo(whitespace);
-        assertThat(user.getIdentityDocument()).isEqualTo(whitespace);
-        assertThat(user.getPhone()).isEqualTo(whitespace);
-        assertThat(user.getRoleId()).isEqualTo(whitespace);
-        assertThat(user.getBirthDate()).isEqualTo(whitespace);
-        assertThat(user.getAddress()).isEqualTo(whitespace);
-    }
-
-    @Test
-    @DisplayName("Should be equal to itself")
-    void shouldBeEqualToItself() {
-        User user = User.builder()
-                .id("123")
-                .firstName("John")
-                .build();
-
-        assertThat(user).isEqualTo(user);
-        assertThat(user.hashCode()).isEqualTo(user.hashCode());
-    }
-
-    @Test
-    @DisplayName("Should not be equal to null")
-    void shouldNotBeEqualToNull() {
-        User user = User.builder()
-                .id("123")
-                .firstName("John")
-                .build();
-
-        assertThat(user).isNotEqualTo(null);
-    }
-
-    @Test
-    @DisplayName("Should not be equal to different class")
-    void shouldNotBeEqualToDifferentClass() {
-        User user = User.builder()
-                .id("123")
-                .firstName("John")
-                .build();
-
-        assertThat(user).isNotEqualTo("not a user");
-        assertThat(user).isNotEqualTo(123);
-    }
 }

@@ -9,6 +9,10 @@ import org.springframework.context.annotation.FilterType;
         includeFilters = {
                 @ComponentScan.Filter(type = FilterType.REGEX, pattern = "^.+UseCase$")
         },
+        excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.REGEX, pattern = "^.+UserUseCase$"),
+                @ComponentScan.Filter(type = FilterType.REGEX, pattern = "^.+LoginUseCase$")
+        },
         useDefaultFilters = false)
 public class UseCasesConfig {
 }

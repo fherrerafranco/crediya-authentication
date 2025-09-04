@@ -1,9 +1,14 @@
 package crediya.authentication.api;
 
 import crediya.authentication.usecase.user.UserUseCase;
+import crediya.authentication.usecase.auth.LoginUseCase;
 import crediya.authentication.model.user.User;
+import crediya.authentication.model.auth.LoginCredentials;
+import crediya.authentication.model.valueobjects.Email;
 import crediya.authentication.api.dto.UserCreateRequest;
 import crediya.authentication.api.dto.UserResponse;
+import crediya.authentication.api.dto.LoginRequest;
+import crediya.authentication.api.dto.LoginResponse;
 import crediya.authentication.api.mapper.UserMapper;
 import crediya.authentication.api.constants.LogMessages;
 import crediya.authentication.model.exception.ValidationException;
@@ -23,6 +28,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class Handler {
     private final UserUseCase userUseCase;
+    private final LoginUseCase loginUseCase;
     private final Validator validator;
     private final UserMapper userMapper;
 
@@ -69,6 +75,47 @@ public class Handler {
         
         if (bindingResult.hasErrors()) {
             log.info(LogMessages.VALIDATION_FAILED, bindingResult.getAllErrors());
+            StringBuilder errorMessage = new StringBuilder("Validation failed: ");
+            bindingResult.getAllErrors().forEach(error -> 
+                errorMessage.append(error.getDefaultMessage()).append("; "));
+            return Mono.error(new ValidationException(errorMessage.toString()));
+        }
+        
+        return Mono.just(request);
+    }
+
+    public Mono<ServerResponse> listenLogin(ServerRequest request) {
+        log.info("Login request received from: {}", 
+                request.remoteAddress().map(addr -> addr.getAddress().getHostAddress()).orElse("unknown"));
+        
+        return request.bodyToMono(LoginRequest.class)
+                .flatMap(this::validateLoginRequest)
+                .flatMap(loginRequest -> {
+                    LoginCredentials credentials = new LoginCredentials(
+                            Email.of(loginRequest.getEmail()),
+                            loginRequest.getPassword()
+                    );
+                    return loginUseCase.authenticate(credentials);
+                })
+                .flatMap(authResult -> 
+                    ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(LoginResponse.builder()
+                                    .token(authResult.getToken())
+                                    .tokenType("Bearer")
+                                    .expiresIn(86400L)
+                                    .build())
+                )
+                .doOnSuccess(response -> log.info("User authenticated successfully"))
+                .doOnError(error -> log.error("Authentication failed: {}", error.getMessage()));
+    }
+    
+    private Mono<LoginRequest> validateLoginRequest(LoginRequest request) {
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(request, "loginRequest");
+        validator.validate(request, bindingResult);
+        
+        if (bindingResult.hasErrors()) {
+            log.info("Login validation failed: {}", bindingResult.getAllErrors());
             StringBuilder errorMessage = new StringBuilder("Validation failed: ");
             bindingResult.getAllErrors().forEach(error -> 
                 errorMessage.append(error.getDefaultMessage()).append("; "));

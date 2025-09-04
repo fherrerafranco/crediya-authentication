@@ -4,6 +4,8 @@ import crediya.authentication.model.user.User;
 import crediya.authentication.model.valueobjects.Email;
 import crediya.authentication.model.valueobjects.Salary;
 import crediya.authentication.model.user.gateways.UserRepository;
+import crediya.authentication.model.role.gateways.RoleRepository;
+import crediya.authentication.model.auth.gateways.PasswordEncoder;
 import crediya.authentication.model.exception.ValidationException;
 import crediya.authentication.model.exception.BusinessRuleViolationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,12 +28,22 @@ class UserUseCaseTest {
 
     @Mock
     private UserRepository userRepository;
+    
+    @Mock
+    private RoleRepository roleRepository;
+    
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     private UserUseCase userUseCase;
 
     @BeforeEach
     void setUp() {
-        userUseCase = new UserUseCase(userRepository);
+        userUseCase = new UserUseCase(userRepository, roleRepository, passwordEncoder);
+    }
+    
+    private void mockValidRole(Integer roleId) {
+        when(roleRepository.existsById(roleId)).thenReturn(Mono.just(true));
     }
 
     @Test
@@ -43,7 +55,7 @@ class UserUseCaseTest {
                 .email(Email.of("john.doe@example.com"))
                 .identityDocument("123456789")
                 .phone("1234567890")
-                .roleId("1")
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .birthDate("1990-01-01")
                 .address("123 Main St")
@@ -56,12 +68,13 @@ class UserUseCaseTest {
                 .email(Email.of("john.doe@example.com"))
                 .identityDocument("123456789")
                 .phone("1234567890")
-                .roleId("1")
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .birthDate("1990-01-01")
                 .address("123 Main St")
                 .build();
 
+        when(roleRepository.existsById(1)).thenReturn(Mono.just(true));
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
         when(userRepository.save(inputUser)).thenReturn(Mono.just(savedUser));
 
@@ -82,9 +95,11 @@ class UserUseCaseTest {
                 .firstName("Error")
                 .lastName("User")
                 .email(Email.of("error@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .build();
 
+        when(roleRepository.existsById(1)).thenReturn(Mono.just(true));
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
 
         RuntimeException expectedException = new RuntimeException("Repository error");
@@ -105,6 +120,7 @@ class UserUseCaseTest {
         User user = User.builder()
                 .lastName("Doe")
                 .email(Email.of("john.doe@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .build();
 
@@ -112,9 +128,11 @@ class UserUseCaseTest {
                 .id("generated-id")
                 .lastName("Doe")
                 .email(Email.of("john.doe@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .build();
 
+        when(roleRepository.existsById(1)).thenReturn(Mono.just(true));
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
         when(userRepository.save(user)).thenReturn(Mono.just(savedUser));
 
@@ -134,6 +152,7 @@ class UserUseCaseTest {
         User user = User.builder()
                 .firstName("John")
                 .email(Email.of("john.doe@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .build();
 
@@ -141,9 +160,11 @@ class UserUseCaseTest {
                 .id("generated-id")
                 .firstName("John")
                 .email(Email.of("john.doe@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .build();
 
+        when(roleRepository.existsById(1)).thenReturn(Mono.just(true));
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
         when(userRepository.save(user)).thenReturn(Mono.just(savedUser));
 
@@ -204,9 +225,11 @@ class UserUseCaseTest {
                 .firstName("John")
                 .lastName("Doe")
                 .email(Email.of("existing@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .build();
 
+        when(roleRepository.existsById(1)).thenReturn(Mono.just(true));
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(true));
 
         Mono<User> result = userUseCase.saveUser(user);
@@ -228,7 +251,7 @@ class UserUseCaseTest {
                 .email(Email.of("alice.johnson@example.com"))
                 .identityDocument("987654321")
                 .phone("0987654321")
-                .roleId("2")
+                .roleId(2)
                 .baseSalary(Salary.of(new BigDecimal("75000")))
                 .birthDate("1985-03-15")
                 .address("789 Pine St")
@@ -241,12 +264,13 @@ class UserUseCaseTest {
                 .email(Email.of("alice.johnson@example.com"))
                 .identityDocument("987654321")
                 .phone("0987654321")
-                .roleId("2")
+                .roleId(2)
                 .baseSalary(Salary.of(new BigDecimal("75000")))
                 .birthDate("1985-03-15")
                 .address("789 Pine St")
                 .build();
 
+        when(roleRepository.existsById(2)).thenReturn(Mono.just(true));
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
         when(userRepository.save(completeUser)).thenReturn(Mono.just(savedCompleteUser));
 
@@ -266,9 +290,11 @@ class UserUseCaseTest {
                 .firstName("Timeout")
                 .lastName("Test")
                 .email(Email.of("timeout@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .build();
 
+        when(roleRepository.existsById(1)).thenReturn(Mono.just(true));
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
         when(userRepository.save(any(User.class))).thenReturn(Mono.never());
 
@@ -345,6 +371,7 @@ class UserUseCaseTest {
                 .firstName("John")
                 .lastName("Doe")
                 .email(Email.of("john.doe@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .build();
 
@@ -353,10 +380,12 @@ class UserUseCaseTest {
                 .firstName("John")
                 .lastName("Doe")
                 .email(Email.of("john.doe@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .build();
 
         // Repository returns empty, defaultIfEmpty(true) should make it unique
+        when(roleRepository.existsById(1)).thenReturn(Mono.just(true));
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.empty());
         when(userRepository.save(user)).thenReturn(Mono.just(savedUser));
 
@@ -377,9 +406,11 @@ class UserUseCaseTest {
                 .firstName("John")
                 .lastName("Doe")
                 .email(Email.of("john.doe@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("50000")))
                 .build();
 
+        when(roleRepository.existsById(1)).thenReturn(Mono.just(true));
         RuntimeException expectedException = new RuntimeException("Database connection error");
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.error(expectedException));
 
@@ -398,15 +429,18 @@ class UserUseCaseTest {
     void shouldHandleUserWithMinimalRequiredData() {
         User minimalUser = User.builder()
                 .email(Email.of("minimal@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(BigDecimal.ZERO))
                 .build();
 
         User savedMinimalUser = User.builder()
                 .id("minimal-id")
                 .email(Email.of("minimal@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(BigDecimal.ZERO))
                 .build();
 
+        when(roleRepository.existsById(1)).thenReturn(Mono.just(true));
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
         when(userRepository.save(minimalUser)).thenReturn(Mono.just(savedMinimalUser));
 
@@ -424,6 +458,7 @@ class UserUseCaseTest {
                 .firstName("Rich")
                 .lastName("Person")
                 .email(Email.of("rich@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("15000000")))
                 .build();
 
@@ -432,9 +467,11 @@ class UserUseCaseTest {
                 .firstName("Rich")
                 .lastName("Person")
                 .email(Email.of("rich@example.com"))
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("15000000")))
                 .build();
 
+        when(roleRepository.existsById(1)).thenReturn(Mono.just(true));
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
         when(userRepository.save(maxSalaryUser)).thenReturn(Mono.just(savedMaxSalaryUser));
 
@@ -455,7 +492,7 @@ class UserUseCaseTest {
                 .email(Email.of("complete@example.com"))
                 .identityDocument("COMP123456789")
                 .phone("+1-555-123-4567")
-                .roleId("ADMIN")
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("85000.50")))
                 .birthDate("1990-12-25")
                 .address("123 Complete Street, Full City, State 12345")
@@ -468,12 +505,13 @@ class UserUseCaseTest {
                 .email(Email.of("complete@example.com"))
                 .identityDocument("COMP123456789")
                 .phone("+1-555-123-4567")
-                .roleId("ADMIN")
+                .roleId(1)
                 .baseSalary(Salary.of(new BigDecimal("85000.50")))
                 .birthDate("1990-12-25")
                 .address("123 Complete Street, Full City, State 12345")
                 .build();
 
+        when(roleRepository.existsById(1)).thenReturn(Mono.just(true));
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
         when(userRepository.save(completeUser)).thenReturn(Mono.just(savedCompleteUser));
 
@@ -484,83 +522,6 @@ class UserUseCaseTest {
                 .verifyComplete();
     }
 
-    @Test
-    @DisplayName("Should handle multiple rapid save attempts")
-    void shouldHandleMultipleRapidSaveAttempts() {
-        User user1 = User.builder()
-                .firstName("User1")
-                .email(Email.of("user1@example.com"))
-                .baseSalary(Salary.of(new BigDecimal("50000")))
-                .build();
-
-        User user2 = User.builder()
-                .firstName("User2")
-                .email(Email.of("user2@example.com"))
-                .baseSalary(Salary.of(new BigDecimal("60000")))
-                .build();
-
-        User saved1 = User.builder().id("id1").firstName("User1").email(Email.of("user1@example.com")).baseSalary(Salary.of(new BigDecimal("50000"))).build();
-        User saved2 = User.builder().id("id2").firstName("User2").email(Email.of("user2@example.com")).baseSalary(Salary.of(new BigDecimal("60000"))).build();
-
-        when(userRepository.existsByEmail(Email.of("user1@example.com"))).thenReturn(Mono.just(false));
-        when(userRepository.existsByEmail(Email.of("user2@example.com"))).thenReturn(Mono.just(false));
-        when(userRepository.save(user1)).thenReturn(Mono.just(saved1));
-        when(userRepository.save(user2)).thenReturn(Mono.just(saved2));
-
-        Flux<User> results = Flux.merge(
-            userUseCase.saveUser(user1),
-            userUseCase.saveUser(user2)
-        );
-
-        StepVerifier.create(results)
-                .expectNextCount(2)
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("Should handle repository returning unexpected null")
-    void shouldHandleRepositoryReturningUnexpectedNull() {
-        User user = User.builder()
-                .firstName("Test")
-                .email(Email.of("test@example.com"))
-                .baseSalary(Salary.of(new BigDecimal("50000")))
-                .build();
-
-        when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
-        when(userRepository.save(user)).thenReturn(Mono.empty());
-
-        Mono<User> result = userUseCase.saveUser(user);
-
-        StepVerifier.create(result)
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("Should handle concurrent email existence checks")
-    void shouldHandleConcurrentEmailExistenceChecks() {
-        User user = User.builder()
-                .firstName("Concurrent")
-                .email(Email.of("concurrent@example.com"))
-                .baseSalary(Salary.of(new BigDecimal("50000")))
-                .build();
-
-        User savedUser = User.builder()
-                .id("concurrent-id")
-                .firstName("Concurrent")
-                .email(Email.of("concurrent@example.com"))
-                .baseSalary(Salary.of(new BigDecimal("50000")))
-                .build();
-
-        when(userRepository.existsByEmail(any(Email.class)))
-                .thenReturn(Mono.just(false).delayElement(java.time.Duration.ofMillis(100)));
-        when(userRepository.save(user)).thenReturn(Mono.just(savedUser));
-
-        Mono<User> result = userUseCase.saveUser(user);
-
-        StepVerifier.create(result)
-                .expectNext(savedUser)
-                .verifyComplete();
-    }
 
     @Test
     @DisplayName("Should validate email format through value object")

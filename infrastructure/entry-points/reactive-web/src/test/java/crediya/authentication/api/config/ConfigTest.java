@@ -6,6 +6,7 @@ import crediya.authentication.api.config.UserPath;
 import crediya.authentication.api.dto.UserResponse;
 import crediya.authentication.api.mapper.UserMapper;
 import crediya.authentication.usecase.user.UserUseCase;
+import crediya.authentication.usecase.auth.LoginUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,9 @@ import static org.mockito.ArgumentMatchers.any;
 @Import({CorsConfig.class, SecurityHeadersConfig.class})
 @TestPropertySource(properties = {
     "routes.paths.users=/api/v1/users",
-    "cors.allowed-origins=*"
+    "cors.allowed-origins=*",
+    "spring.security.user.name=test",
+    "spring.security.user.password=test"
 })
 class ConfigTest {
 
@@ -36,6 +39,9 @@ class ConfigTest {
 
     @MockitoBean
     private UserUseCase userUseCase;
+    
+    @MockitoBean
+    private LoginUseCase loginUseCase;
     
     @MockitoBean
     private UserMapper userMapper;
@@ -78,6 +84,7 @@ class ConfigTest {
     void corsConfigurationShouldAllowOrigins() {
         webTestClient.get()
                 .uri("/api/v1/users")
+                .headers(headers -> headers.setBasicAuth("test", "test"))
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueEquals("Content-Security-Policy",

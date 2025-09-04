@@ -48,6 +48,7 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
                 .baseSalary(entity.getBaseSalary() != null ? Salary.of(entity.getBaseSalary()) : null)
                 .birthDate(entity.getBirthDate())
                 .address(entity.getAddress())
+                .passwordHash(entity.getPasswordHash())
                 .build();
     }
     
@@ -68,6 +69,7 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
                 .baseSalary(user.getBaseSalary() != null ? user.getBaseSalary().getValue() : null)
                 .birthDate(user.getBirthDate())
                 .address(user.getAddress())
+                .passwordHash(user.getPasswordHash())
                 .build();
     }
 
@@ -78,8 +80,8 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         }
         
         log.info("Saving user with email: {}", user.getEmail());
-        
-        // R2DBC will automatically generate UUID for new entities (when ID is null)
+
+
         UserEntity userEntity = toData(user);
         return userReactiveRepository.save(userEntity)
                 .map(this::toEntity)
@@ -102,4 +104,12 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
                 .doOnError(error -> log.error("Error checking email existence: {}", error.getMessage()));
     }
 
+    @Override
+    public Mono<User> findByEmail(Email email) {
+        return userReactiveRepository.findByEmail(email.getValue())
+                .map(UserReactiveRepositoryAdapter::entityToDomain)
+                .doOnError(error -> log.error("Error finding user by email: {}", error.getMessage()));
+    }
+
 }
+

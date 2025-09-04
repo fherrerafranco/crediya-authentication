@@ -3,6 +3,8 @@ package crediya.authentication.api;
 import crediya.authentication.api.config.UserPath;
 import crediya.authentication.api.dto.UserCreateRequest;
 import crediya.authentication.api.dto.UserResponse;
+import crediya.authentication.api.dto.LoginRequest;
+import crediya.authentication.api.dto.LoginResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -56,6 +58,31 @@ public class RouterRest {
                     )
             ),
             @RouterOperation(
+                    path = "/api/v1/login",
+                    method = RequestMethod.POST,
+                    operation = @Operation(
+                            operationId = "login",
+                            summary = "User authentication",
+                            description = "Authenticates a user with email and password, returns JWT token",
+                            requestBody = @RequestBody(
+                                    description = "Login credentials",
+                                    required = true,
+                                    content = @Content(
+                                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                            schema = @Schema(implementation = LoginRequest.class)
+                                    )
+                            ),
+                            responses = {
+                                    @ApiResponse(responseCode = "200", description = "Authentication successful",
+                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                    schema = @Schema(implementation = LoginResponse.class))),
+                                    @ApiResponse(responseCode = "400", description = "Invalid credentials"),
+                                    @ApiResponse(responseCode = "401", description = "Authentication failed"),
+                                    @ApiResponse(responseCode = "500", description = "Internal server error")
+                            }
+                    )
+            ),
+            @RouterOperation(
                     path = "/api/v1/users",
                     method = RequestMethod.GET,
                     operation = @Operation(
@@ -72,7 +99,8 @@ public class RouterRest {
             )
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
-        return route(POST(userPath.getUsers()), userHandler::listenSaveUser)
+        return route(POST("/api/v1/login"), userHandler::listenLogin)
+                .andRoute(POST(userPath.getUsers()), userHandler::listenSaveUser)
                 .andRoute(GET(userPath.getUsers()), userHandler::listenGetAllUsers);
     }
 }

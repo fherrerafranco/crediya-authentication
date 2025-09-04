@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class User {
     private String id;
     private String firstName;
@@ -20,8 +20,9 @@ public class User {
     private Email email;
     private String identityDocument;
     private String phone;
-    private String roleId;
+    private Integer roleId;
     private Salary baseSalary;
     private String birthDate;
     private String address;
+    private String passwordHash;
 }

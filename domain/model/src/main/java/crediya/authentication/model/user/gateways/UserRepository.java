@@ -12,5 +12,7 @@ public interface UserRepository {
     Flux<User> getAll();
     
     Mono<Boolean> existsByEmail(Email email);
+    
+    Mono<User> findByEmail(Email email);
 
 }

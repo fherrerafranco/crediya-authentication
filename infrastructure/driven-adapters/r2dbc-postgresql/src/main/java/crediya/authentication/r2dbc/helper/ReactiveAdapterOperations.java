@@ -11,8 +11,8 @@ import java.lang.reflect.ParameterizedType;
 import java.util.function.Function;
 
 public abstract class ReactiveAdapterOperations<E, D, I, R extends ReactiveCrudRepository<D, I> & ReactiveQueryByExampleExecutor<D>> {
-    protected R repository;
-    protected ObjectMapper mapper;
+    protected final R repository;
+    protected final ObjectMapper mapper;
     private final Class<D> dataClass;
     private final Function<D, E> toEntityFn;
 
