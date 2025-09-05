@@ -2,10 +2,10 @@ package crediya.authentication.r2dbc;
 
 import crediya.authentication.model.user.User;
 import crediya.authentication.model.valueobjects.Email;
-import crediya.authentication.model.valueobjects.Salary;
 import crediya.authentication.model.user.gateways.UserRepository;
 import crediya.authentication.r2dbc.entity.UserEntity;
 import crediya.authentication.r2dbc.helper.ReactiveAdapterOperations;
+import crediya.authentication.r2dbc.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
@@ -25,52 +25,20 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     
     private final UserReactiveRepository userReactiveRepository;
     private final TransactionalOperator transactionalOperator;
+    private final UserMapper userMapper;
     
-    public UserReactiveRepositoryAdapter(UserReactiveRepository repository, ObjectMapper mapper, TransactionalOperator transactionalOperator) {
-        super(repository, mapper, UserReactiveRepositoryAdapter::entityToDomain);
+    public UserReactiveRepositoryAdapter(UserReactiveRepository repository, ObjectMapper mapper, 
+                                        TransactionalOperator transactionalOperator, UserMapper userMapper) {
+        super(repository, mapper, userMapper::entityToDomain);
         this.userReactiveRepository = repository;
         this.transactionalOperator = transactionalOperator;
+        this.userMapper = userMapper;
     }
     
-    private static User entityToDomain(UserEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-        
-        return User.builder()
-                .id(entity.getId() != null ? entity.getId().toString() : null)
-                .firstName(entity.getFirstName())
-                .lastName(entity.getLastName())
-                .email(entity.getEmail() != null ? Email.of(entity.getEmail()) : null)
-                .identityDocument(entity.getIdentityDocument())
-                .phone(entity.getPhone())
-                .roleId(entity.getRoleId())
-                .baseSalary(entity.getBaseSalary() != null ? Salary.of(entity.getBaseSalary()) : null)
-                .birthDate(entity.getBirthDate())
-                .address(entity.getAddress())
-                .passwordHash(entity.getPasswordHash())
-                .build();
-    }
     
     @Override
     protected UserEntity toData(User user) {
-        if (user == null) {
-            return null;
-        }
-        
-        return UserEntity.builder()
-                .id(user.getId() != null && !user.getId().trim().isEmpty() ? UUID.fromString(user.getId()) : null)
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail() != null ? user.getEmail().getValue() : null)
-                .identityDocument(user.getIdentityDocument())
-                .phone(user.getPhone())
-                .roleId(user.getRoleId())
-                .baseSalary(user.getBaseSalary() != null ? user.getBaseSalary().getValue() : null)
-                .birthDate(user.getBirthDate())
-                .address(user.getAddress())
-                .passwordHash(user.getPasswordHash())
-                .build();
+        return userMapper.domainToEntity(user);
     }
 
     @Override
@@ -107,7 +75,7 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     @Override
     public Mono<User> findByEmail(Email email) {
         return userReactiveRepository.findByEmail(email.getValue())
-                .map(UserReactiveRepositoryAdapter::entityToDomain)
+                .map(userMapper::entityToDomain)
                 .doOnError(error -> log.error("Error finding user by email: {}", error.getMessage()));
     }
 

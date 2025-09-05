@@ -3,10 +3,13 @@ package crediya.authentication.api.config;
 import crediya.authentication.api.Handler;
 import crediya.authentication.api.RouterRest;
 import crediya.authentication.api.config.UserPath;
+import crediya.authentication.api.config.AuthorizationService;
+import crediya.authentication.api.config.TestSecurityConfig;
 import crediya.authentication.api.dto.UserResponse;
 import crediya.authentication.api.mapper.UserMapper;
 import crediya.authentication.usecase.user.UserUseCase;
 import crediya.authentication.usecase.auth.LoginUseCase;
+import crediya.authentication.model.auth.gateways.PasswordEncoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 
 @ContextConfiguration(classes = {RouterRest.class, Handler.class, UserPath.class})
 @WebFluxTest
-@Import({CorsConfig.class, SecurityHeadersConfig.class})
+@Import({CorsConfig.class, SecurityHeadersConfig.class, TestSecurityConfig.class})
 @TestPropertySource(properties = {
     "routes.paths.users=/api/v1/users",
     "cors.allowed-origins=*",
@@ -45,6 +48,12 @@ class ConfigTest {
     
     @MockitoBean
     private UserMapper userMapper;
+    
+    @MockitoBean
+    private AuthorizationService authorizationService;
+    
+    @MockitoBean
+    private PasswordEncoder passwordEncoder;
 
     private final UserResponse userResponseOne = UserResponse.builder()
             .id("123456789")
@@ -78,13 +87,14 @@ class ConfigTest {
         when(userUseCase.getAllUsers()).thenReturn(Flux.empty());
         // Mock the mapper to return the DTOs we want to test
         when(userMapper.toResponse(any())).thenReturn(userResponseOne, userResponseTwo);
+        // Mock authorization service to allow access
+        when(authorizationService.hasAdminOrAdvisorRole(any())).thenReturn(true);
     }
 
     @Test
     void corsConfigurationShouldAllowOrigins() {
         webTestClient.get()
                 .uri("/api/v1/users")
-                .headers(headers -> headers.setBasicAuth("test", "test"))
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueEquals("Content-Security-Policy",

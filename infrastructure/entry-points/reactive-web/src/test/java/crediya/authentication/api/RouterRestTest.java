@@ -2,6 +2,7 @@ package crediya.authentication.api;
 
 import crediya.authentication.api.config.UserPath;
 import crediya.authentication.api.config.TestSecurityConfig;
+import crediya.authentication.api.config.AuthorizationService;
 import crediya.authentication.api.exception.GlobalExceptionHandler;
 import crediya.authentication.api.dto.UserCreateRequest;
 import crediya.authentication.api.dto.UserResponse;
@@ -9,7 +10,9 @@ import crediya.authentication.api.mapper.UserMapper;
 import crediya.authentication.model.user.User;
 import crediya.authentication.usecase.user.UserUseCase;
 import crediya.authentication.usecase.auth.LoginUseCase;
+import crediya.authentication.model.auth.gateways.PasswordEncoder;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -56,6 +59,12 @@ class RouterRestTest {
     
     @MockitoBean
     private Validator validator;
+    
+    @MockitoBean
+    private AuthorizationService authorizationService;
+    
+    @MockitoBean
+    private PasswordEncoder passwordEncoder;
 
     private final String users = "/api/v1/users";
 
@@ -83,6 +92,11 @@ class RouterRestTest {
             .address("Street 123 #45-67")
             .email("correo@deprueba.com")
             .build();
+
+    @BeforeEach
+    void setUp() {
+        when(authorizationService.hasAdminOrAdvisorRole(any())).thenReturn(true);
+    }
 
     @Test
     void shouldPostSaveUser() {

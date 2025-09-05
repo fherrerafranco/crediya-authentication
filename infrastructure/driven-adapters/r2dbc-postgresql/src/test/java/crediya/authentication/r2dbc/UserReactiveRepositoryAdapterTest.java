@@ -4,6 +4,7 @@ import crediya.authentication.model.user.User;
 import crediya.authentication.model.valueobjects.Email;
 import crediya.authentication.model.valueobjects.Salary;
 import crediya.authentication.r2dbc.entity.UserEntity;
+import crediya.authentication.r2dbc.mapper.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,9 +36,12 @@ class UserReactiveRepositoryAdapterTest {
     @Mock
     TransactionalOperator transactionalOperator;
 
+    @Mock
+    UserMapper userMapper;
+
     @BeforeEach
     void setup() {
-        repositoryAdapter = new UserReactiveRepositoryAdapter(repository, mapper, transactionalOperator);
+        repositoryAdapter = new UserReactiveRepositoryAdapter(repository, mapper, transactionalOperator, userMapper);
     }
 
     private final UUID testUuid1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
@@ -71,6 +75,8 @@ class UserReactiveRepositoryAdapterTest {
 
     @Test
     void shouldSaveUser() {
+        when(userMapper.domainToEntity(user)).thenReturn(userEntity);
+        when(userMapper.entityToDomain(userEntity)).thenReturn(user);
         when(repository.save(any(UserEntity.class))).thenReturn(Mono.just(userEntity));
         when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -120,6 +126,8 @@ class UserReactiveRepositoryAdapterTest {
                 .email(Email.of("jane.doe@example.com"))
                 .build();
 
+        when(userMapper.entityToDomain(userEntity)).thenReturn(user);
+        when(userMapper.entityToDomain(userEntity2)).thenReturn(user2);
         when(repository.findAll()).thenReturn(Flux.just(userEntity, userEntity2));
 
         Flux<User> result = repositoryAdapter.getAll();
