@@ -4,7 +4,7 @@ import crediya.authentication.model.user.User;
 import crediya.authentication.model.valueobjects.Email;
 import crediya.authentication.model.valueobjects.Salary;
 import crediya.authentication.r2dbc.entity.UserEntity;
-import crediya.authentication.r2dbc.mapper.UserMapper;
+import crediya.authentication.r2dbc.mapper.UserEntityMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,7 +37,7 @@ class UserReactiveRepositoryAdapterTest {
     TransactionalOperator transactionalOperator;
 
     @Mock
-    UserMapper userMapper;
+    UserEntityMapper userMapper;
 
     @BeforeEach
     void setup() {

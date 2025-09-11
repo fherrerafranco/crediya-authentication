@@ -13,9 +13,9 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Mapper(componentModel = "spring")
-public interface UserMapper {
+public interface UserEntityMapper {
     
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
+    UserEntityMapper INSTANCE = Mappers.getMapper(UserEntityMapper.class);
     
     @Mapping(source = "id", target = "id", qualifiedByName = "uuidToString")
     @Mapping(source = "email", target = "email", qualifiedByName = "stringToEmail")

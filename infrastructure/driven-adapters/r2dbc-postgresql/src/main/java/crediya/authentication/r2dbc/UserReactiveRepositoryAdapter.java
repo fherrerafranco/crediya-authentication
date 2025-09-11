@@ -5,7 +5,7 @@ import crediya.authentication.model.valueobjects.Email;
 import crediya.authentication.model.user.gateways.UserRepository;
 import crediya.authentication.r2dbc.entity.UserEntity;
 import crediya.authentication.r2dbc.helper.ReactiveAdapterOperations;
-import crediya.authentication.r2dbc.mapper.UserMapper;
+import crediya.authentication.r2dbc.mapper.UserEntityMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
@@ -25,10 +25,10 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     
     private final UserReactiveRepository userReactiveRepository;
     private final TransactionalOperator transactionalOperator;
-    private final UserMapper userMapper;
+    private final UserEntityMapper userMapper;
     
     public UserReactiveRepositoryAdapter(UserReactiveRepository repository, ObjectMapper mapper, 
-                                        TransactionalOperator transactionalOperator, UserMapper userMapper) {
+                                        TransactionalOperator transactionalOperator, UserEntityMapper userMapper) {
         super(repository, mapper, userMapper::entityToDomain);
         this.userReactiveRepository = repository;
         this.transactionalOperator = transactionalOperator;
