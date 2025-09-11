@@ -3,6 +3,8 @@ package crediya.authentication.api;
 import crediya.authentication.api.config.UserPath;
 import crediya.authentication.api.config.TestSecurityConfig;
 import crediya.authentication.api.config.AuthorizationService;
+import crediya.authentication.api.config.CorsConfig;
+import crediya.authentication.api.config.SecurityHeadersConfig;
 import crediya.authentication.api.exception.GlobalExceptionHandler;
 import crediya.authentication.api.dto.UserCreateRequest;
 import crediya.authentication.api.dto.UserResponse;
@@ -16,6 +18,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -38,12 +41,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doNothing;
 
 
-@ContextConfiguration(classes = {RouterRest.class, Handler.class, UserPath.class, GlobalExceptionHandler.class})
+@ContextConfiguration(classes = {RouterRest.class, Handler.class, GlobalExceptionHandler.class})
 @WebFluxTest
-@Import(TestSecurityConfig.class)
+@Import({CorsConfig.class, SecurityHeadersConfig.class, TestSecurityConfig.class})
 @TestPropertySource(properties = {
-    "routes.paths.users=/api/v1/users"
+    "routes.paths.users=/api/v1/users",
+    "routes.paths.login=/api/v1/login",
+    "cors.allowed-origins=*",
+    "spring.security.user.name=test",
+    "spring.security.user.password=test"
 })
+@EnableConfigurationProperties(UserPath.class)
 class RouterRestTest {
 
     @Autowired

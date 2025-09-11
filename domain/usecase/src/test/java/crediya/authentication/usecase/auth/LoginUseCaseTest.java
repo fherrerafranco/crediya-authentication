@@ -56,7 +56,7 @@ class LoginUseCaseTest {
 
         when(userRepository.findByEmail(credentials.getEmail())).thenReturn(Mono.just(user));
         when(passwordEncoder.matches("correctPassword", "$2a$12$hashedPassword")).thenReturn(true);
-        when(jwtTokenManager.generateToken("user123", 1)).thenReturn("jwt-token-123");
+        when(jwtTokenManager.generateToken("user123", "CUSTOMER")).thenReturn("jwt-token-123");
 
         Mono<AuthenticationResult> result = loginUseCase.authenticate(credentials);
 
@@ -71,7 +71,7 @@ class LoginUseCaseTest {
 
         verify(userRepository).findByEmail(credentials.getEmail());
         verify(passwordEncoder).matches("correctPassword", "$2a$12$hashedPassword");
-        verify(jwtTokenManager).generateToken("user123", 1);
+        verify(jwtTokenManager).generateToken("user123", "CUSTOMER");
     }
 
     @Test
@@ -259,7 +259,7 @@ class LoginUseCaseTest {
         RuntimeException jwtException = new RuntimeException("JWT generation error");
         when(userRepository.findByEmail(credentials.getEmail())).thenReturn(Mono.just(user));
         when(passwordEncoder.matches("correctPassword", "$2a$12$hashedPassword")).thenReturn(true);
-        when(jwtTokenManager.generateToken("user123", 1)).thenThrow(jwtException);
+        when(jwtTokenManager.generateToken("user123", "CUSTOMER")).thenThrow(jwtException);
 
         Mono<AuthenticationResult> result = loginUseCase.authenticate(credentials);
 
@@ -269,20 +269,20 @@ class LoginUseCaseTest {
 
         verify(userRepository).findByEmail(credentials.getEmail());
         verify(passwordEncoder).matches("correctPassword", "$2a$12$hashedPassword");
-        verify(jwtTokenManager).generateToken("user123", 1);
+        verify(jwtTokenManager).generateToken("user123", "CUSTOMER");
     }
 
     @Test
     @DisplayName("Should authenticate user with different roles")
     void shouldAuthenticateUserWithDifferentRoles() {
-        // Test with ADMIN role
-        testSuccessfulAuthenticationWithRole(1, "admin@example.com", "adminToken");
+        // Test with CUSTOMER role (ID=1)
+        testSuccessfulAuthenticationWithRole(1, "customer@example.com", "customerToken");
         
-        // Test with ADVISOR role
+        // Test with ADVISOR role (ID=2)
         testSuccessfulAuthenticationWithRole(2, "advisor@example.com", "advisorToken");
         
-        // Test with CUSTOMER role
-        testSuccessfulAuthenticationWithRole(3, "customer@example.com", "customerToken");
+        // Test with ADMIN role (ID=3)
+        testSuccessfulAuthenticationWithRole(3, "admin@example.com", "adminToken");
     }
 
     private void testSuccessfulAuthenticationWithRole(Integer roleId, String email, String expectedToken) {
@@ -298,9 +298,11 @@ class LoginUseCaseTest {
                 .roleId(roleId)
                 .build();
 
+        String roleName = getRoleNameFromId(roleId);
+        
         when(userRepository.findByEmail(credentials.getEmail())).thenReturn(Mono.just(user));
         when(passwordEncoder.matches("password", "$2a$12$hash")).thenReturn(true);
-        when(jwtTokenManager.generateToken("user-" + roleId, roleId)).thenReturn(expectedToken);
+        when(jwtTokenManager.generateToken("user-" + roleId, roleName)).thenReturn(expectedToken);
 
         StepVerifier.create(loginUseCase.authenticate(credentials))
                 .assertNext(authResult -> {
@@ -309,6 +311,15 @@ class LoginUseCaseTest {
                     assertThat(authResult.getRoleId()).isEqualTo(roleId);
                 })
                 .verifyComplete();
+    }
+    
+    private String getRoleNameFromId(Integer roleId) {
+        switch (roleId) {
+            case 1: return "CUSTOMER";
+            case 2: return "ADVISOR";
+            case 3: return "ADMIN";
+            default: throw new IllegalArgumentException("Invalid role ID: " + roleId);
+        }
     }
 
 }

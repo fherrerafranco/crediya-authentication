@@ -6,11 +6,13 @@ import crediya.authentication.usecase.auth.LoginUseCase;
 import crediya.authentication.usecase.user.UserUseCase;
 import crediya.authentication.model.auth.gateways.JwtTokenManager;
 import crediya.authentication.model.user.gateways.UserRepository;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
+@EnableConfigurationProperties({SecurityProperties.class, UserPath.class})
 public class AuthenticationConfig {
     
     @Bean

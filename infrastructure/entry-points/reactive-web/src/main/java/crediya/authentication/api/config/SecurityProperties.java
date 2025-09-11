@@ -1,21 +1,15 @@
 package crediya.authentication.api.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.ArrayList;
 
-@Component
+@Getter
+@Setter
 @ConfigurationProperties(prefix = "security.jwt")
 public class SecurityProperties {
-    
-    private List<String> publicPaths;
-    
-    public List<String> getPublicPaths() {
-        return publicPaths;
-    }
-    
-    public void setPublicPaths(List<String> publicPaths) {
-        this.publicPaths = publicPaths;
-    }
+    private List<String> publicPaths = new ArrayList<>();
 }

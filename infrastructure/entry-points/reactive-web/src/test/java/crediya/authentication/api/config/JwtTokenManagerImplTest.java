@@ -21,12 +21,12 @@ class JwtTokenManagerImplTest {
     }
 
     @Test
-    @DisplayName("Should generate valid JWT token with user ID and role ID")
-    void shouldGenerateValidJwtTokenWithUserIdAndRoleId() {
+    @DisplayName("Should generate valid JWT token with user ID and role name")
+    void shouldGenerateValidJwtTokenWithUserIdAndRoleName() {
         String userId = "user123";
-        Integer roleId = 1;
+        String roleName = "ADMIN";
 
-        String token = jwtTokenManager.generateToken(userId, roleId);
+        String token = jwtTokenManager.generateToken(userId, roleName);
 
         assertThat(token).isNotNull();
         assertThat(token).isNotEmpty();
@@ -36,8 +36,8 @@ class JwtTokenManagerImplTest {
     @Test
     @DisplayName("Should generate different tokens for different users")
     void shouldGenerateDifferentTokensForDifferentUsers() {
-        String token1 = jwtTokenManager.generateToken("user1", 1);
-        String token2 = jwtTokenManager.generateToken("user2", 1);
+        String token1 = jwtTokenManager.generateToken("user1", "ADMIN");
+        String token2 = jwtTokenManager.generateToken("user2", "ADMIN");
 
         assertThat(token1).isNotEqualTo(token2);
     }
@@ -45,8 +45,8 @@ class JwtTokenManagerImplTest {
     @Test
     @DisplayName("Should generate different tokens for different roles")
     void shouldGenerateDifferentTokensForDifferentRoles() {
-        String token1 = jwtTokenManager.generateToken("user123", 1);
-        String token2 = jwtTokenManager.generateToken("user123", 2);
+        String token1 = jwtTokenManager.generateToken("user123", "ADMIN");
+        String token2 = jwtTokenManager.generateToken("user123", "ADVISOR");
 
         assertThat(token1).isNotEqualTo(token2);
     }
@@ -55,7 +55,7 @@ class JwtTokenManagerImplTest {
     @DisplayName("Should extract user ID from valid token")
     void shouldExtractUserIdFromValidToken() {
         String userId = "user123";
-        String token = jwtTokenManager.generateToken(userId, 1);
+        String token = jwtTokenManager.generateToken(userId, "ADMIN");
 
         String extractedUserId = jwtTokenManager.getUserIdFromToken(token);
 
@@ -63,20 +63,20 @@ class JwtTokenManagerImplTest {
     }
 
     @Test
-    @DisplayName("Should extract role ID from valid token")
-    void shouldExtractRoleIdFromValidToken() {
-        Integer roleId = 2;
-        String token = jwtTokenManager.generateToken("user123", roleId);
+    @DisplayName("Should extract role name from valid token")
+    void shouldExtractRoleNameFromValidToken() {
+        String roleName = "ADVISOR";
+        String token = jwtTokenManager.generateToken("user123", roleName);
 
-        Integer extractedRoleId = jwtTokenManager.getRoleIdFromToken(token);
+        String extractedRoleName = jwtTokenManager.getRoleFromToken(token);
 
-        assertThat(extractedRoleId).isEqualTo(roleId);
+        assertThat(extractedRoleName).isEqualTo(roleName);
     }
 
     @Test
     @DisplayName("Should validate token correctly")
     void shouldValidateTokenCorrectly() {
-        String token = jwtTokenManager.generateToken("user123", 1);
+        String token = jwtTokenManager.generateToken("user123", "ADMIN");
 
         boolean isValid = jwtTokenManager.validateToken(token);
 
@@ -86,7 +86,7 @@ class JwtTokenManagerImplTest {
     @Test
     @DisplayName("Should detect invalid signature")
     void shouldDetectInvalidSignature() {
-        String token = jwtTokenManager.generateToken("user123", 1);
+        String token = jwtTokenManager.generateToken("user123", "ADMIN");
         // Tamper with the token by changing the last character
         String tamperedToken = token.substring(0, token.length() - 1) + "X";
 
@@ -122,13 +122,13 @@ class JwtTokenManagerImplTest {
     }
 
     @Test
-    @DisplayName("Should extract user ID from token with different role IDs")
-    void shouldExtractUserIdFromTokenWithDifferentRoleIds() {
+    @DisplayName("Should extract user ID from token with different role names")
+    void shouldExtractUserIdFromTokenWithDifferentRoleNames() {
         String userId = "user456";
         
-        String adminToken = jwtTokenManager.generateToken(userId, 1);
-        String advisorToken = jwtTokenManager.generateToken(userId, 2);
-        String customerToken = jwtTokenManager.generateToken(userId, 3);
+        String adminToken = jwtTokenManager.generateToken(userId, "ADMIN");
+        String advisorToken = jwtTokenManager.generateToken(userId, "ADVISOR");
+        String customerToken = jwtTokenManager.generateToken(userId, "CUSTOMER");
 
         assertThat(jwtTokenManager.getUserIdFromToken(adminToken)).isEqualTo(userId);
         assertThat(jwtTokenManager.getUserIdFromToken(advisorToken)).isEqualTo(userId);
@@ -136,29 +136,29 @@ class JwtTokenManagerImplTest {
     }
 
     @Test
-    @DisplayName("Should extract role ID from token with different user IDs")
-    void shouldExtractRoleIdFromTokenWithDifferentUserIds() {
-        Integer roleId = 2;
+    @DisplayName("Should extract role name from token with different user IDs")
+    void shouldExtractRoleNameFromTokenWithDifferentUserIds() {
+        String roleName = "ADVISOR";
         
-        String token1 = jwtTokenManager.generateToken("user1", roleId);
-        String token2 = jwtTokenManager.generateToken("user2", roleId);
-        String token3 = jwtTokenManager.generateToken("user3", roleId);
+        String token1 = jwtTokenManager.generateToken("user1", roleName);
+        String token2 = jwtTokenManager.generateToken("user2", roleName);
+        String token3 = jwtTokenManager.generateToken("user3", roleName);
 
-        assertThat(jwtTokenManager.getRoleIdFromToken(token1)).isEqualTo(roleId);
-        assertThat(jwtTokenManager.getRoleIdFromToken(token2)).isEqualTo(roleId);
-        assertThat(jwtTokenManager.getRoleIdFromToken(token3)).isEqualTo(roleId);
+        assertThat(jwtTokenManager.getRoleFromToken(token1)).isEqualTo(roleName);
+        assertThat(jwtTokenManager.getRoleFromToken(token2)).isEqualTo(roleName);
+        assertThat(jwtTokenManager.getRoleFromToken(token3)).isEqualTo(roleName);
     }
 
     @Test
     @DisplayName("Should handle special characters in user ID")
     void shouldHandleSpecialCharactersInUserId() {
         String userIdWithSpecialChars = "user-123_test@domain.com";
-        Integer roleId = 1;
+        String roleName = "ADMIN";
         
-        String token = jwtTokenManager.generateToken(userIdWithSpecialChars, roleId);
+        String token = jwtTokenManager.generateToken(userIdWithSpecialChars, roleName);
         
         assertThat(jwtTokenManager.getUserIdFromToken(token)).isEqualTo(userIdWithSpecialChars);
-        assertThat(jwtTokenManager.getRoleIdFromToken(token)).isEqualTo(roleId);
+        assertThat(jwtTokenManager.getRoleFromToken(token)).isEqualTo(roleName);
         assertThat(jwtTokenManager.validateToken(token)).isTrue();
     }
 
@@ -166,12 +166,12 @@ class JwtTokenManagerImplTest {
     @DisplayName("Should handle UUID user IDs correctly")
     void shouldHandleUuidUserIdsCorrectly() {
         String uuidUserId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
-        Integer roleId = 3;
+        String roleName = "CUSTOMER";
         
-        String token = jwtTokenManager.generateToken(uuidUserId, roleId);
+        String token = jwtTokenManager.generateToken(uuidUserId, roleName);
         
         assertThat(jwtTokenManager.getUserIdFromToken(token)).isEqualTo(uuidUserId);
-        assertThat(jwtTokenManager.getRoleIdFromToken(token)).isEqualTo(roleId);
+        assertThat(jwtTokenManager.getRoleFromToken(token)).isEqualTo(roleName);
     }
 
     @Test
@@ -182,14 +182,14 @@ class JwtTokenManagerImplTest {
         assertThatThrownBy(() -> jwtTokenManager.getUserIdFromToken(invalidToken))
                 .isInstanceOf(RuntimeException.class);
         
-        assertThatThrownBy(() -> jwtTokenManager.getRoleIdFromToken(invalidToken))
+        assertThatThrownBy(() -> jwtTokenManager.getRoleFromToken(invalidToken))
                 .isInstanceOf(RuntimeException.class);
     }
 
     @Test
     @DisplayName("Should generate tokens with correct expiration")
     void shouldGenerateTokensWithCorrectExpiration() {
-        String token = jwtTokenManager.generateToken("user123", 1);
+        String token = jwtTokenManager.generateToken("user123", "ADMIN");
         
         // Token should be valid immediately after creation
         assertThat(jwtTokenManager.validateToken(token)).isTrue();
@@ -204,29 +204,30 @@ class JwtTokenManagerImplTest {
     void shouldGenerateTokenWithAllRoleTypes() {
         String userId = "testUser";
         
-        // Test with all expected role IDs
-        for (Integer roleId = 1; roleId <= 3; roleId++) {
-            String token = jwtTokenManager.generateToken(userId, roleId);
+        // Test with all expected role names
+        String[] roleNames = {"ADMIN", "ADVISOR", "CUSTOMER"};
+        for (String roleName : roleNames) {
+            String token = jwtTokenManager.generateToken(userId, roleName);
             
             assertThat(token).isNotNull().isNotEmpty();
             assertThat(jwtTokenManager.getUserIdFromToken(token)).isEqualTo(userId);
-            assertThat(jwtTokenManager.getRoleIdFromToken(token)).isEqualTo(roleId);
+            assertThat(jwtTokenManager.getRoleFromToken(token)).isEqualTo(roleName);
             assertThat(jwtTokenManager.validateToken(token)).isTrue();
         }
     }
 
     @Test
-    @DisplayName("Should handle edge case role IDs")
-    void shouldHandleEdgeCaseRoleIds() {
+    @DisplayName("Should handle custom role names")
+    void shouldHandleCustomRoleNames() {
         String userId = "user123";
         
-        // Test with edge case values
-        Integer[] edgeCaseRoleIds = {0, -1, 999, Integer.MAX_VALUE};
+        // Test with custom role names
+        String[] customRoleNames = {"SUPER_ADMIN", "GUEST", "ANALYST", "MANAGER"};
         
-        for (Integer roleId : edgeCaseRoleIds) {
-            String token = jwtTokenManager.generateToken(userId, roleId);
+        for (String roleName : customRoleNames) {
+            String token = jwtTokenManager.generateToken(userId, roleName);
             
-            assertThat(jwtTokenManager.getRoleIdFromToken(token)).isEqualTo(roleId);
+            assertThat(jwtTokenManager.getRoleFromToken(token)).isEqualTo(roleName);
             assertThat(jwtTokenManager.validateToken(token)).isTrue();
         }
     }
@@ -234,13 +235,13 @@ class JwtTokenManagerImplTest {
     @Test
     @DisplayName("Should consistently validate same token multiple times")
     void shouldConsistentlyValidateSameTokenMultipleTimes() {
-        String token = jwtTokenManager.generateToken("user123", 1);
+        String token = jwtTokenManager.generateToken("user123", "ADMIN");
         
         // Validate the same token multiple times
         for (int i = 0; i < 5; i++) {
             assertThat(jwtTokenManager.validateToken(token)).isTrue();
             assertThat(jwtTokenManager.getUserIdFromToken(token)).isEqualTo("user123");
-            assertThat(jwtTokenManager.getRoleIdFromToken(token)).isEqualTo(1);
+            assertThat(jwtTokenManager.getRoleFromToken(token)).isEqualTo("ADMIN");
         }
     }
 
@@ -248,8 +249,8 @@ class JwtTokenManagerImplTest {
     @DisplayName("Should create token with valid non-null values")
     void shouldCreateTokenWithValidNonNullValues() {
         // Test that normal operation works - null handling is implementation detail
-        String token1 = jwtTokenManager.generateToken("user123", 1);
-        String token2 = jwtTokenManager.generateToken("user456", 2);
+        String token1 = jwtTokenManager.generateToken("user123", "ADMIN");
+        String token2 = jwtTokenManager.generateToken("user456", "ADVISOR");
         
         assertThat(token1).isNotNull().isNotEmpty();
         assertThat(token2).isNotNull().isNotEmpty();
@@ -259,7 +260,7 @@ class JwtTokenManagerImplTest {
     @Test
     @DisplayName("Should validate token with correct issuer and audience")
     void shouldValidateTokenWithCorrectIssuerAndAudience() {
-        String token = jwtTokenManager.generateToken("user123", 1);
+        String token = jwtTokenManager.generateToken("user123", "ADMIN");
         
         boolean isValid = jwtTokenManager.validateToken(token);
         
@@ -269,8 +270,8 @@ class JwtTokenManagerImplTest {
     @Test
     @DisplayName("Should generate tokens with unique JWT IDs")
     void shouldGenerateTokensWithUniqueJwtIds() {
-        String token1 = jwtTokenManager.generateToken("user123", 1);
-        String token2 = jwtTokenManager.generateToken("user123", 1);
+        String token1 = jwtTokenManager.generateToken("user123", "ADMIN");
+        String token2 = jwtTokenManager.generateToken("user123", "ADMIN");
         
         // Even with same user and role, tokens should be different due to unique JWT IDs
         assertThat(token1).isNotEqualTo(token2);

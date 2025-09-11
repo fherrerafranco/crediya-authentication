@@ -49,10 +49,10 @@ public class JwtAuthenticationFilter implements WebFilter {
         
         // Add user context to exchange attributes
         String userId = jwtTokenManager.getUserIdFromToken(token);
-        Integer roleId = jwtTokenManager.getRoleIdFromToken(token);
+        String roleName = jwtTokenManager.getRoleFromToken(token);
         
         exchange.getAttributes().put(JwtConstants.USER_ID_ATTRIBUTE, userId);
-        exchange.getAttributes().put(JwtConstants.ROLE_ID_ATTRIBUTE, roleId);
+        exchange.getAttributes().put(JwtConstants.ROLE_ATTRIBUTE, roleName);
         
         return chain.filter(exchange);
     }

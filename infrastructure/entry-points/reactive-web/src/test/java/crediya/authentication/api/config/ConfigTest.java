@@ -2,18 +2,15 @@ package crediya.authentication.api.config;
 
 import crediya.authentication.api.Handler;
 import crediya.authentication.api.RouterRest;
-import crediya.authentication.api.config.UserPath;
-import crediya.authentication.api.config.AuthorizationService;
-import crediya.authentication.api.config.TestSecurityConfig;
 import crediya.authentication.api.dto.UserResponse;
 import crediya.authentication.api.mapper.UserResponseMapper;
 import crediya.authentication.usecase.user.UserUseCase;
 import crediya.authentication.usecase.auth.LoginUseCase;
 import crediya.authentication.model.auth.gateways.PasswordEncoder;
-import crediya.authentication.model.auth.Permission;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
@@ -28,11 +25,13 @@ import java.math.BigDecimal;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 
-@ContextConfiguration(classes = {RouterRest.class, Handler.class, UserPath.class})
+@ContextConfiguration(classes = {RouterRest.class, Handler.class})
 @WebFluxTest
 @Import({CorsConfig.class, SecurityHeadersConfig.class, TestSecurityConfig.class})
+@EnableConfigurationProperties(UserPath.class)
 @TestPropertySource(properties = {
     "routes.paths.users=/api/v1/users",
+    "routes.paths.login=/api/v1/login",
     "cors.allowed-origins=*",
     "spring.security.user.name=test",
     "spring.security.user.password=test"

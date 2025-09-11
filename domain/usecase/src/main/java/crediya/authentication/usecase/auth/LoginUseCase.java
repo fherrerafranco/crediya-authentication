@@ -5,6 +5,7 @@ import crediya.authentication.model.auth.LoginCredentials;
 import crediya.authentication.model.auth.gateways.JwtTokenManager;
 import crediya.authentication.model.auth.gateways.PasswordEncoder;
 import crediya.authentication.model.exception.BusinessRuleViolationException;
+import crediya.authentication.model.role.RoleType;
 import crediya.authentication.model.user.gateways.UserRepository;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -29,7 +30,11 @@ public class LoginUseCase {
                 })
                 .switchIfEmpty(Mono.error(new BusinessRuleViolationException("Invalid email or password")))
                 .map(user -> {
-                    String token = jwtTokenManager.generateToken(user.getId(), user.getRoleId());
+                    // Get role name from role ID for more secure JWT
+                    RoleType roleType = RoleType.fromId(Integer.valueOf(user.getRoleId()));
+                    String roleName = roleType.getName();
+                    
+                    String token = jwtTokenManager.generateToken(user.getId(), roleName);
                     return AuthenticationResult.builder()
                             .token(token)
                             .userId(user.getId())

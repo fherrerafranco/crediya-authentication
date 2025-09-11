@@ -1,6 +1,6 @@
 package crediya.authentication.api.exception;
 
-import crediya.authentication.api.config.ErrorMessages;
+import crediya.authentication.api.constants.ErrorMessages;
 import crediya.authentication.api.constants.LogMessages;
 import crediya.authentication.model.exception.BusinessRuleViolationException;
 import crediya.authentication.model.exception.ValidationException;
@@ -132,6 +132,9 @@ public class GlobalExceptionHandler {
         if (ex instanceof WebExchangeBindException) {
             String errorMessage = "Validation error with " + ((WebExchangeBindException) ex).getFieldErrorCount() + " field errors";
             log.error(LogMessages.UNEXPECTED_ERROR, errorMessage);
+        } else if (ex instanceof RuntimeException && ex.getMessage() != null) {
+            // For runtime exceptions in tests, log without stack trace to reduce noise
+            log.error(LogMessages.UNEXPECTED_ERROR, ex.getMessage());
         } else {
             log.error(LogMessages.UNEXPECTED_ERROR, ex.getMessage(), ex);
         }

@@ -45,6 +45,7 @@ cors:
 routes:
   paths:
     users: /api/v1/users
+    login: /api/v1/login
 
 # Security Configuration
 security:

@@ -3,14 +3,14 @@ package crediya.authentication.api.constants;
 public final class JwtConstants {
     
     // JWT Claims
-    public static final String ROLE_ID_CLAIM = "roleId";
+    public static final String ROLE_CLAIM = "role";
     
     // HTTP Authentication
     public static final String BEARER_PREFIX = "Bearer ";
     
     // Context Attributes (reused from SecurityContextExtractor but centralized here)
     public static final String USER_ID_ATTRIBUTE = "userId";
-    public static final String ROLE_ID_ATTRIBUTE = "roleId";
+    public static final String ROLE_ATTRIBUTE = "role";
     
     // Error response fields
     public static final String TIMESTAMP_FIELD = "timestamp";

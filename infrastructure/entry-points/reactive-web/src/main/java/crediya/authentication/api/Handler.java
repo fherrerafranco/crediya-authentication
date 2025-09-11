@@ -12,11 +12,9 @@ import crediya.authentication.api.dto.LoginResponse;
 import crediya.authentication.api.mapper.UserResponseMapper;
 import crediya.authentication.api.constants.LogMessages;
 import crediya.authentication.api.constants.HandlerConstants;
-import crediya.authentication.api.config.ErrorMessages;
 import crediya.authentication.api.config.AuthorizationService;
 import crediya.authentication.model.auth.Permission;
 import crediya.authentication.model.exception.ValidationException;
-import crediya.authentication.model.exception.BusinessRuleViolationException;
 import crediya.authentication.model.auth.gateways.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +36,6 @@ public class Handler {
     private final Validator validator;
     private final UserResponseMapper userResponseMapper;
     private final AuthorizationService authorizationService;
-    private final PasswordEncoder passwordEncoder;
 
     public Mono<ServerResponse> listenSaveUser(ServerRequest request) {
         log.info(LogMessages.POST_REQUEST_RECEIVED, 

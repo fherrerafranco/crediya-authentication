@@ -1,6 +1,6 @@
 package crediya.authentication.api.dto;
 
-import crediya.authentication.api.config.ErrorMessages;
+import crediya.authentication.api.constants.ErrorMessages;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;

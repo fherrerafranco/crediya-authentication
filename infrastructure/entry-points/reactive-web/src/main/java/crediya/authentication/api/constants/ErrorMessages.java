@@ -1,4 +1,4 @@
-package crediya.authentication.api.config;
+package crediya.authentication.api.constants;
 
 /**
  * Constants for error messages used in exception handling.

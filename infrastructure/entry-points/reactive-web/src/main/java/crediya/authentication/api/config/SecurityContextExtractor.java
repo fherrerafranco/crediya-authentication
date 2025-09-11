@@ -1,5 +1,6 @@
 package crediya.authentication.api.config;
 
+import crediya.authentication.api.constants.JwtConstants;
 import crediya.authentication.model.auth.AuthorizationContext;
 import crediya.authentication.model.constants.AuthorizationMessages;
 import crediya.authentication.model.role.RoleType;
@@ -11,8 +12,7 @@ import org.springframework.web.server.ServerWebExchange;
 @Component
 public class SecurityContextExtractor {
     
-    private static final String USER_ID_ATTRIBUTE = "userId";
-    private static final String ROLE_ID_ATTRIBUTE = "roleId";
+    // Use constants from JwtConstants for consistency
     private static final String CLIENT_IP_HEADER = "X-Forwarded-For";
     private static final String USER_AGENT_HEADER = "User-Agent";
     private static final String UNKNOWN_CLIENT_IP = "unknown";
@@ -30,14 +30,14 @@ public class SecurityContextExtractor {
     public AuthorizationContext extractAuthorizationContext(ServerWebExchange exchange, String targetResourceId) {
         try {
             String userId = extractUserId(exchange);
-            Integer roleId = extractRoleId(exchange);
+            String roleName = extractRoleName(exchange);
             RoleType roleType = extractRoleType(exchange);
             String clientIp = extractClientIp(exchange);
             
-            log.debug("Extracting auth context - userId: {}, roleId: {}, roleType: {}", userId, roleId, roleType);
+            log.debug("Extracting auth context - userId: {}, roleName: {}, roleType: {}", userId, roleName, roleType);
             
             if (userId == null || roleType == null) {
-                log.warn("Invalid security context - userId: {}, roleId: {}, roleType: {}", userId, roleId, roleType);
+                log.warn("Invalid security context - userId: {}, roleName: {}, roleType: {}", userId, roleName, roleType);
                 log.warn("Available exchange attributes: {}", exchange.getAttributes().keySet());
                 return null;
             }
@@ -61,29 +61,29 @@ public class SecurityContextExtractor {
      * Extracts user ID from the security context
      */
     public String extractUserId(ServerWebExchange exchange) {
-        return (String) exchange.getAttributes().get(USER_ID_ATTRIBUTE);
+        return (String) exchange.getAttributes().get(JwtConstants.USER_ID_ATTRIBUTE);
     }
     
     /**
-     * Extracts role ID as Integer from the security context
+     * Extracts role name from the security context
      */
-    public Integer extractRoleId(ServerWebExchange exchange) {
-        return (Integer) exchange.getAttributes().get(ROLE_ID_ATTRIBUTE);
+    public String extractRoleName(ServerWebExchange exchange) {
+        return (String) exchange.getAttributes().get(JwtConstants.ROLE_ATTRIBUTE);
     }
     
     /**
      * Extracts role type from the security context
      */
     public RoleType extractRoleType(ServerWebExchange exchange) {
-        Integer roleId = extractRoleId(exchange);
-        if (roleId == null) {
+        String roleName = extractRoleName(exchange);
+        if (roleName == null) {
             return null;
         }
         
         try {
-            return RoleType.fromId(roleId);
+            return RoleType.fromName(roleName);
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid role ID: {}", roleId);
+            log.warn("Invalid role name: {}", roleName);
             return null;
         }
     }

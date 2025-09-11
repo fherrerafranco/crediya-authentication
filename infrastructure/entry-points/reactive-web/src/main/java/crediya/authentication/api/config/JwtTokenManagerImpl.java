@@ -33,13 +33,13 @@ public class JwtTokenManagerImpl implements JwtTokenManager {
     }
 
     @Override
-    public String generateToken(String userId, Integer roleId) {
+    public String generateToken(String userId, String roleName) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + jwtExpiration);
         
         return Jwts.builder()
                 .subject(userId)
-                .claim(JwtConstants.ROLE_ID_CLAIM, roleId)
+                .claim(JwtConstants.ROLE_CLAIM, roleName)
                 .issuer(jwtIssuer)
                 .audience().add(jwtAudience).and()  // Fixed: added .and() to return to JwtBuilder
                 .issuedAt(now)
@@ -77,9 +77,9 @@ public class JwtTokenManagerImpl implements JwtTokenManager {
     }
 
     @Override
-    public Integer getRoleIdFromToken(String token) {
+    public String getRoleFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        return claims.get(JwtConstants.ROLE_ID_CLAIM, Integer.class);
+        return claims.get(JwtConstants.ROLE_CLAIM, String.class);
     }
 
     private Claims getClaimsFromToken(String token) {
