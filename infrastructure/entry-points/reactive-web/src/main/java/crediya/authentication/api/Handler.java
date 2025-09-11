@@ -9,10 +9,12 @@ import crediya.authentication.api.dto.UserCreateRequest;
 import crediya.authentication.api.dto.UserResponse;
 import crediya.authentication.api.dto.LoginRequest;
 import crediya.authentication.api.dto.LoginResponse;
-import crediya.authentication.api.mapper.UserMapper;
+import crediya.authentication.api.mapper.UserResponseMapper;
 import crediya.authentication.api.constants.LogMessages;
+import crediya.authentication.api.constants.HandlerConstants;
 import crediya.authentication.api.config.ErrorMessages;
 import crediya.authentication.api.config.AuthorizationService;
+import crediya.authentication.model.auth.Permission;
 import crediya.authentication.model.exception.ValidationException;
 import crediya.authentication.model.exception.BusinessRuleViolationException;
 import crediya.authentication.model.auth.gateways.PasswordEncoder;
@@ -34,27 +36,38 @@ public class Handler {
     private final UserUseCase userUseCase;
     private final LoginUseCase loginUseCase;
     private final Validator validator;
-    private final UserMapper userMapper;
+    private final UserResponseMapper userResponseMapper;
     private final AuthorizationService authorizationService;
     private final PasswordEncoder passwordEncoder;
 
     public Mono<ServerResponse> listenSaveUser(ServerRequest request) {
         log.info(LogMessages.POST_REQUEST_RECEIVED, 
-                request.remoteAddress().map(addr -> addr.getAddress().getHostAddress()).orElse("unknown"),
-                request.headers().firstHeader("User-Agent"));
+                request.remoteAddress().map(addr -> addr.getAddress().getHostAddress()).orElse(HandlerConstants.UNKNOWN_ADDRESS),
+                request.headers().firstHeader(HandlerConstants.USER_AGENT_HEADER));
         
-        // Check authorization - only ADMIN or ADVISOR can create users
-        if (!authorizationService.hasAdminOrAdvisorRole(request.exchange())) {
-            return ServerResponse.status(HttpStatus.FORBIDDEN)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue("{\"error\":\"Insufficient permissions to create users\"}");
-        }
+        // Check authorization - only users with CREATE_USER permission
+        return authorizationService.hasPermission(request.exchange(), Permission.CREATE_USER)
+                .flatMap(hasPermission -> {
+                    if (!hasPermission) {
+                        return ServerResponse.status(HttpStatus.FORBIDDEN)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(String.format(HandlerConstants.ERROR_JSON_TEMPLATE, HandlerConstants.INSUFFICIENT_PERMISSIONS_CREATE_USERS));
+                    }
+                    return proceedWithUserCreation(request);
+                })
+                .switchIfEmpty(ServerResponse.status(HttpStatus.FORBIDDEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(String.format(HandlerConstants.ERROR_JSON_TEMPLATE, HandlerConstants.INSUFFICIENT_PERMISSIONS_CREATE_USERS)))
+                .doOnError(error -> log.error(LogMessages.POST_REQUEST_ERROR, error.getMessage()));
+    }
+
+    private Mono<ServerResponse> proceedWithUserCreation(ServerRequest request) {
         
         return request.bodyToMono(UserCreateRequest.class)
                 .flatMap(this::validateRequest)
                 .flatMap(validRequest -> {
                     try {
-                        User user = userMapper.toDomain(validRequest);
+                        User user = userResponseMapper.toDomain(validRequest);
                         return userUseCase.saveUser(user);
                     } catch (Exception e) {
                         return Mono.error(e);
@@ -62,42 +75,46 @@ public class Handler {
                 })
                 .flatMap(savedUser -> {
                     log.info(LogMessages.USER_CREATED_SUCCESS, savedUser.getId());
-                    UserResponse response = userMapper.toResponse(savedUser);
+                    UserResponse response = userResponseMapper.toResponse(savedUser);
                     return ServerResponse.status(HttpStatus.CREATED)
                             .contentType(MediaType.APPLICATION_JSON)
                             .bodyValue(response);
-                })
-                .doOnError(error -> log.error(LogMessages.POST_REQUEST_ERROR, error.getMessage()));
+                });
     }
 
     public Mono<ServerResponse> listenGetAllUsers(ServerRequest request) {
         log.info(LogMessages.GET_REQUEST_RECEIVED, 
-                request.remoteAddress().map(addr -> addr.getAddress().getHostAddress()).orElse("unknown"),
-                request.headers().firstHeader("User-Agent"));
+                request.remoteAddress().map(addr -> addr.getAddress().getHostAddress()).orElse(HandlerConstants.UNKNOWN_ADDRESS),
+                request.headers().firstHeader(HandlerConstants.USER_AGENT_HEADER));
         
-        // Check authorization - only ADMIN or ADVISOR can view all users
-        if (!authorizationService.hasAdminOrAdvisorRole(request.exchange())) {
-            return ServerResponse.status(HttpStatus.FORBIDDEN)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue("{\"error\":\"Insufficient permissions to view all users\"}");
-        }
-        
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(userUseCase.getAllUsers().map(userMapper::toResponse), UserResponse.class)
-                .doOnSuccess(response -> log.info(LogMessages.GET_RESPONSE_SUCCESS))
+        // Check authorization - only users with VIEW_ALL_USERS permission
+        return authorizationService.hasPermission(request.exchange(), Permission.VIEW_ALL_USERS)
+                .flatMap(hasPermission -> {
+                    if (!hasPermission) {
+                        return ServerResponse.status(HttpStatus.FORBIDDEN)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(String.format(HandlerConstants.ERROR_JSON_TEMPLATE, HandlerConstants.INSUFFICIENT_PERMISSIONS_VIEW_USERS));
+                    }
+                    return ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(userUseCase.getAllUsers().map(userResponseMapper::toResponse), UserResponse.class)
+                            .doOnSuccess(response -> log.info(LogMessages.GET_RESPONSE_SUCCESS));
+                })
+                .switchIfEmpty(ServerResponse.status(HttpStatus.FORBIDDEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(String.format(HandlerConstants.ERROR_JSON_TEMPLATE, HandlerConstants.INSUFFICIENT_PERMISSIONS_VIEW_USERS)))
                 .doOnError(error -> log.error(LogMessages.GET_REQUEST_ERROR, error.getMessage()));
     }
 
     private Mono<UserCreateRequest> validateRequest(UserCreateRequest request) {
-        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(request, "userCreateRequest");
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(request, HandlerConstants.USER_CREATE_REQUEST_BINDING_NAME);
         validator.validate(request, bindingResult);
         
         if (bindingResult.hasErrors()) {
             log.info(LogMessages.VALIDATION_FAILED, bindingResult.getAllErrors());
-            StringBuilder errorMessage = new StringBuilder("Validation failed: ");
+            StringBuilder errorMessage = new StringBuilder(HandlerConstants.VALIDATION_FAILED_PREFIX);
             bindingResult.getAllErrors().forEach(error -> 
-                errorMessage.append(error.getDefaultMessage()).append("; "));
+                errorMessage.append(error.getDefaultMessage()).append(HandlerConstants.VALIDATION_ERROR_SEPARATOR));
             return Mono.error(new ValidationException(errorMessage.toString()));
         }
         
@@ -105,8 +122,8 @@ public class Handler {
     }
 
     public Mono<ServerResponse> listenLogin(ServerRequest request) {
-        log.info("Login request received from: {}", 
-                request.remoteAddress().map(addr -> addr.getAddress().getHostAddress()).orElse("unknown"));
+        log.info(HandlerConstants.LOGIN_REQUEST_RECEIVED_LOG, 
+                request.remoteAddress().map(addr -> addr.getAddress().getHostAddress()).orElse(HandlerConstants.UNKNOWN_ADDRESS));
         
         return request.bodyToMono(LoginRequest.class)
                 .flatMap(this::validateLoginRequest)
@@ -122,23 +139,23 @@ public class Handler {
                             .contentType(MediaType.APPLICATION_JSON)
                             .bodyValue(LoginResponse.builder()
                                     .token(authResult.getToken())
-                                    .tokenType("Bearer")
-                                    .expiresIn(86400L)
+                                    .tokenType(HandlerConstants.BEARER_TOKEN_TYPE)
+                                    .expiresIn(HandlerConstants.DEFAULT_TOKEN_EXPIRATION_SECONDS)
                                     .build())
                 )
-                .doOnSuccess(response -> log.info(ErrorMessages.USER_AUTHENTICATED_SUCCESS))
-                .doOnError(error -> log.error("Authentication failed: {}", error.getMessage()));
+                .doOnSuccess(response -> log.info(HandlerConstants.USER_AUTHENTICATED_SUCCESS))
+                .doOnError(error -> log.error(HandlerConstants.AUTHENTICATION_FAILED_LOG, error.getMessage()));
     }
     
     private Mono<LoginRequest> validateLoginRequest(LoginRequest request) {
-        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(request, "loginRequest");
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(request, HandlerConstants.LOGIN_REQUEST_BINDING_NAME);
         validator.validate(request, bindingResult);
         
         if (bindingResult.hasErrors()) {
-            log.info("Login validation failed: {}", bindingResult.getAllErrors());
-            StringBuilder errorMessage = new StringBuilder("Validation failed: ");
+            log.info(HandlerConstants.LOGIN_VALIDATION_FAILED_LOG, bindingResult.getAllErrors());
+            StringBuilder errorMessage = new StringBuilder(HandlerConstants.VALIDATION_FAILED_PREFIX);
             bindingResult.getAllErrors().forEach(error -> 
-                errorMessage.append(error.getDefaultMessage()).append("; "));
+                errorMessage.append(error.getDefaultMessage()).append(HandlerConstants.VALIDATION_ERROR_SEPARATOR));
             return Mono.error(new ValidationException(errorMessage.toString()));
         }
         

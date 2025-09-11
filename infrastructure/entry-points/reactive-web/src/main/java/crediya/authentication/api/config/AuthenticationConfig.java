@@ -1,6 +1,5 @@
 package crediya.authentication.api.config;
 
-import crediya.authentication.model.auth.AuthorizationService;
 import crediya.authentication.model.auth.gateways.PasswordEncoder;
 import crediya.authentication.model.role.gateways.RoleRepository;
 import crediya.authentication.usecase.auth.LoginUseCase;

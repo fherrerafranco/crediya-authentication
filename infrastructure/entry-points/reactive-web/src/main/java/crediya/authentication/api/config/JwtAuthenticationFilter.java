@@ -1,6 +1,7 @@
 package crediya.authentication.api.config;
 
 import crediya.authentication.model.auth.gateways.JwtTokenManager;
+import crediya.authentication.api.constants.JwtConstants;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,7 +20,6 @@ public class JwtAuthenticationFilter implements WebFilter {
     
     private final JwtTokenManager jwtTokenManager;
     private final SecurityProperties securityProperties;
-    private static final String BEARER_PREFIX = "Bearer ";
     
     public JwtAuthenticationFilter(JwtTokenManager jwtTokenManager, SecurityProperties securityProperties) {
         this.jwtTokenManager = jwtTokenManager;
@@ -37,11 +37,11 @@ public class JwtAuthenticationFilter implements WebFilter {
         
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         
-        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+        if (authHeader == null || !authHeader.startsWith(JwtConstants.BEARER_PREFIX)) {
             return unauthorized(exchange);
         }
         
-        String token = authHeader.substring(BEARER_PREFIX.length());
+        String token = authHeader.substring(JwtConstants.BEARER_PREFIX.length());
         
         if (!jwtTokenManager.validateToken(token)) {
             return unauthorized(exchange);
@@ -51,8 +51,8 @@ public class JwtAuthenticationFilter implements WebFilter {
         String userId = jwtTokenManager.getUserIdFromToken(token);
         Integer roleId = jwtTokenManager.getRoleIdFromToken(token);
         
-        exchange.getAttributes().put("userId", userId);
-        exchange.getAttributes().put("roleId", roleId);
+        exchange.getAttributes().put(JwtConstants.USER_ID_ATTRIBUTE, userId);
+        exchange.getAttributes().put(JwtConstants.ROLE_ID_ATTRIBUTE, roleId);
         
         return chain.filter(exchange);
     }
@@ -71,8 +71,11 @@ public class JwtAuthenticationFilter implements WebFilter {
         exchange.getResponse().getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         
         String errorResponse = String.format(
-            "{\"timestamp\":\"%s\",\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Access denied. Valid JWT token required.\"}",
-            LocalDateTime.now()
+            JwtConstants.UNAUTHORIZED_JSON_TEMPLATE,
+            JwtConstants.TIMESTAMP_FIELD, LocalDateTime.now(),
+            JwtConstants.STATUS_FIELD, JwtConstants.UNAUTHORIZED_STATUS_CODE,
+            JwtConstants.ERROR_FIELD, JwtConstants.UNAUTHORIZED_ERROR,
+            JwtConstants.MESSAGE_FIELD, JwtConstants.ACCESS_DENIED_MESSAGE
         );
         
         DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(errorResponse.getBytes());

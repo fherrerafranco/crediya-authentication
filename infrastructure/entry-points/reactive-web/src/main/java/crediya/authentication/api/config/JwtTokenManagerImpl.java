@@ -1,6 +1,7 @@
 package crediya.authentication.api.config;
 
 import crediya.authentication.model.auth.gateways.JwtTokenManager;
+import crediya.authentication.api.constants.JwtConstants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -38,7 +39,7 @@ public class JwtTokenManagerImpl implements JwtTokenManager {
         
         return Jwts.builder()
                 .subject(userId)
-                .claim("roleId", roleId)
+                .claim(JwtConstants.ROLE_ID_CLAIM, roleId)
                 .issuer(jwtIssuer)
                 .audience().add(jwtAudience).and()  // Fixed: added .and() to return to JwtBuilder
                 .issuedAt(now)
@@ -78,7 +79,7 @@ public class JwtTokenManagerImpl implements JwtTokenManager {
     @Override
     public Integer getRoleIdFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        return claims.get("roleId", Integer.class);
+        return claims.get(JwtConstants.ROLE_ID_CLAIM, Integer.class);
     }
 
     private Claims getClaimsFromToken(String token) {

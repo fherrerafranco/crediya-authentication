@@ -14,10 +14,7 @@ public final class ErrorMessages {
     public static final String BAD_REQUEST = "Bad Request";
     public static final String UNAUTHORIZED = "Unauthorized";
     
-    // Validation Messages
-    public static final String INVALID_VALUE = "Invalid value";
-    public static final String FIELD_REQUIRED = "Field is required";
-    public static final String INVALID_FORMAT = "Invalid format";
+    // Validation Messages (specific field validation messages are defined below)
     
     // Field validation messages
     public static final String FIRST_NAME_REQUIRED = "First name is required";
@@ -26,9 +23,6 @@ public final class ErrorMessages {
     public static final String EMAIL_MUST_BE_VALID = "Email must be valid";
     public static final String PASSWORD_REQUIRED = "Password is required";
     public static final String BASE_SALARY_REQUIRED = "Base salary is required";
-    
-    // Authentication messages
-    public static final String USER_AUTHENTICATED_SUCCESS = "User authenticated successfully";
     
     // Database Constraint Messages
     public static final String NOT_NULL_CONSTRAINT = "not-null constraint";

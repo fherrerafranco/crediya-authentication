@@ -46,10 +46,7 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         if (user == null) {
             return Mono.error(new IllegalArgumentException("User cannot be null"));
         }
-        
         log.info("Saving user with email: {}", user.getEmail());
-
-
         UserEntity userEntity = toData(user);
         return userReactiveRepository.save(userEntity)
                 .map(this::toEntity)

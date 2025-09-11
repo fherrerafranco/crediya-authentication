@@ -17,8 +17,7 @@ INSERT INTO roles (name, description) VALUES
 
 -- Update users table for authentication
 ALTER TABLE users 
-    ALTER COLUMN role_id TYPE INTEGER USING role_id::integer,
-    ADD COLUMN password_hash VARCHAR(255);
+    ALTER COLUMN role_id TYPE INTEGER USING role_id::integer;
 
 -- Add foreign key constraint
 ALTER TABLE users 
