@@ -81,26 +81,63 @@ class RoleTest {
     }
 
     @Test
-    @DisplayName("Should be immutable")
-    void shouldBeImmutable() {
-        Role role = Role.builder()
-                .id(1)
-                .name("ADMIN")
-                .description("Administrator")
-                .build();
+    @DisplayName("Should return correct RoleType from name")
+    void shouldReturnCorrectRoleTypeFromName() {
+        Role adminRole = Role.builder().id(1).name("ADMIN").build();
+        Role advisorRole = Role.builder().id(2).name("ADVISOR").build();
+        Role customerRole = Role.builder().id(3).name("CUSTOMER").build();
 
-        // All fields are final and have only getters, so immutability is guaranteed
-        assertThat(role.getId()).isEqualTo(1);
-        assertThat(role.getName()).isEqualTo("ADMIN");
-        assertThat(role.getDescription()).isEqualTo("Administrator");
+        assertThat(adminRole.getRoleType()).isEqualTo(RoleType.ADMIN);
+        assertThat(advisorRole.getRoleType()).isEqualTo(RoleType.ADVISOR);
+        assertThat(customerRole.getRoleType()).isEqualTo(RoleType.CUSTOMER);
+    }
+
+    @Test
+    @DisplayName("Should return permissions for role")
+    void shouldReturnPermissionsForRole() {
+        Role adminRole = Role.builder().id(1).name("ADMIN").build();
         
-        // Verify fields remain constant
-        Integer originalId = role.getId();
-        String originalName = role.getName();
-        String originalDescription = role.getDescription();
+        assertThat(adminRole.getPermissions()).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("Should check if role has specific permission")
+    void shouldCheckIfRoleHasSpecificPermission() {
+        Role adminRole = Role.builder().id(1).name("ADMIN").build();
+        Role customerRole = Role.builder().id(3).name("CUSTOMER").build();
         
-        assertThat(role.getId()).isSameAs(originalId);
-        assertThat(role.getName()).isSameAs(originalName);
-        assertThat(role.getDescription()).isSameAs(originalDescription);
+        assertThat(adminRole.hasPermission(crediya.authentication.model.auth.Permission.CREATE_USER)).isTrue();
+        assertThat(customerRole.hasPermission(crediya.authentication.model.auth.Permission.CREATE_USER)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should identify administrative roles")
+    void shouldIdentifyAdministrativeRoles() {
+        Role adminRole = Role.builder().id(1).name("ADMIN").build();
+        Role advisorRole = Role.builder().id(2).name("ADVISOR").build();
+        Role customerRole = Role.builder().id(3).name("CUSTOMER").build();
+
+        assertThat(adminRole.isAdministrative()).isTrue();
+        assertThat(advisorRole.isAdministrative()).isTrue();
+        assertThat(customerRole.isAdministrative()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should create role from RoleType")
+    void shouldCreateRoleFromRoleType() {
+        Role adminRole = Role.fromRoleType(RoleType.ADMIN);
+        
+        assertThat(adminRole.getId()).isEqualTo(RoleType.ADMIN.getId());
+        assertThat(adminRole.getName()).isEqualTo(RoleType.ADMIN.getName());
+        assertThat(adminRole.getDescription()).isEqualTo(RoleType.ADMIN.getDescription());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when creating role from null RoleType")
+    void shouldThrowExceptionWhenCreatingRoleFromNullRoleType() {
+        assertThat(org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> Role.fromRoleType(null)
+        ).getMessage()).contains("RoleType cannot be null");
     }
 }

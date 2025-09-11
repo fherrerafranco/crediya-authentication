@@ -6,10 +6,11 @@ import crediya.authentication.api.config.UserPath;
 import crediya.authentication.api.config.AuthorizationService;
 import crediya.authentication.api.config.TestSecurityConfig;
 import crediya.authentication.api.dto.UserResponse;
-import crediya.authentication.api.mapper.UserMapper;
+import crediya.authentication.api.mapper.UserResponseMapper;
 import crediya.authentication.usecase.user.UserUseCase;
 import crediya.authentication.usecase.auth.LoginUseCase;
 import crediya.authentication.model.auth.gateways.PasswordEncoder;
+import crediya.authentication.model.auth.Permission;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 
@@ -47,7 +49,7 @@ class ConfigTest {
     private LoginUseCase loginUseCase;
     
     @MockitoBean
-    private UserMapper userMapper;
+    private UserResponseMapper userMapper;
     
     @MockitoBean
     private AuthorizationService authorizationService;
@@ -87,8 +89,8 @@ class ConfigTest {
         when(userUseCase.getAllUsers()).thenReturn(Flux.empty());
         // Mock the mapper to return the DTOs we want to test
         when(userMapper.toResponse(any())).thenReturn(userResponseOne, userResponseTwo);
-        // Mock authorization service to allow access
-        when(authorizationService.hasAdminOrAdvisorRole(any())).thenReturn(true);
+        // Mock authorization service to allow access for new permission-based method
+        when(authorizationService.hasPermission(any(), any())).thenReturn(Mono.just(true));
     }
 
     @Test

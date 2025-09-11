@@ -6,11 +6,12 @@ import crediya.authentication.api.config.AuthorizationService;
 import crediya.authentication.api.exception.GlobalExceptionHandler;
 import crediya.authentication.api.dto.UserCreateRequest;
 import crediya.authentication.api.dto.UserResponse;
-import crediya.authentication.api.mapper.UserMapper;
+import crediya.authentication.api.mapper.UserResponseMapper;
 import crediya.authentication.model.user.User;
 import crediya.authentication.usecase.user.UserUseCase;
 import crediya.authentication.usecase.auth.LoginUseCase;
 import crediya.authentication.model.auth.gateways.PasswordEncoder;
+import crediya.authentication.model.auth.Permission;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +56,7 @@ class RouterRestTest {
     private LoginUseCase loginUseCase;
     
     @MockitoBean
-    private UserMapper userMapper;
+    private UserResponseMapper userMapper;
     
     @MockitoBean
     private Validator validator;
@@ -95,7 +96,8 @@ class RouterRestTest {
 
     @BeforeEach
     void setUp() {
-        when(authorizationService.hasAdminOrAdvisorRole(any())).thenReturn(true);
+        // Mock authorization service to allow access for new permission-based method
+        when(authorizationService.hasPermission(any(), any())).thenReturn(Mono.just(true));
     }
 
     @Test

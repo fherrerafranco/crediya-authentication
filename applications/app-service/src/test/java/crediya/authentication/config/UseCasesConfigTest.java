@@ -1,6 +1,7 @@
 package crediya.authentication.config;
 
 import crediya.authentication.model.user.gateways.UserRepository;
+import crediya.authentication.model.role.gateways.RoleRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -35,6 +36,11 @@ public class UseCasesConfigTest {
         @Bean
         public UserRepository userRepository() {
             return mock(UserRepository.class);
+        }
+
+        @Bean
+        public RoleRepository roleRepository() {
+            return mock(RoleRepository.class);
         }
 
         @Bean
